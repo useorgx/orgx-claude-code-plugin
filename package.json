@@ -1,0 +1,23 @@
+{
+  "name": "@useorgx/claude-code-plugin",
+  "version": "0.1.1",
+  "description": "OrgX Claude Code plugin with MCP + runtime telemetry hooks",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "node scripts/verify-plugin.mjs",
+    "check": "npm run typecheck && npm run test && npm run verify",
+    "pack": "mkdir -p artifacts && npm pack --pack-destination artifacts",
+    "release:dry-run": "node scripts/release-dry-run.mjs",
+    "dev:claude": "claude --plugin-dir ."
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

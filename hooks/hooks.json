@@ -1,0 +1,56 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/load-orgx-env.mjs"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/orgx-sync-skills.mjs --project_dir=\"${CLAUDE_PROJECT_DIR:-$PWD}\" --best_effort=true --quiet=true"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=session_start --source_client=claude-code --phase=intent --message=\"Claude session started\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=post_tool_use --source_client=claude-code --phase=execution --message=\"Claude tool completed\""
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=subagent_stop --source_client=claude-code --phase=handoff --message=\"Subagent completed\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=stop --source_client=claude-code --phase=completed --message=\"Claude session completed\" --apply_completion=true"
+          }
+        ]
+      }
+    ]
+  }
+}

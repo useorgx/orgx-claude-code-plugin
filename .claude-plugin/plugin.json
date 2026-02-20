@@ -1,0 +1,19 @@
+{
+  "name": "orgx-claude-code-plugin",
+  "version": "0.1.1",
+  "description": "OrgX MCP tools and runtime telemetry hooks for Claude Code.",
+  "author": {
+    "name": "OrgX Team",
+    "url": "https://useorgx.com"
+  },
+  "mcpServers": {
+    "orgx": {
+      "type": "http",
+      "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp}",
+      "headers": {
+        "Authorization": "Bearer ${ORGX_API_KEY:-}",
+        "X-Orgx-User-Id": "${ORGX_USER_ID:-}"
+      }
+    }
+  }
+}
