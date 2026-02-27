@@ -6,6 +6,7 @@ Claude Code plugin package for OrgX:
 - Browser pairing login (`/orgx-login`) with macOS keychain storage
 - Session env hydration from keychain (`hooks/scripts/load-orgx-env.mjs`)
 - Skill-pack sync from OrgX to local `SKILL.md` files (`/orgx-sync-skills`)
+- Agent-pack sync from OrgX to Claude subagent profiles (`/orgx-sync-agents`)
 - Full dispatch/autopilot orchestration (`scripts/run-claude-dispatch-job.mjs`)
 - Project commands, agent profile, and skill guidance
 - CI and architecture ADR for migration planning
@@ -51,8 +52,9 @@ skills/**/SKILL.md           # Reusable guidance
 2. Complete browser auth; key is stored in macOS keychain.
 3. SessionStart hook loads key into `CLAUDE_ENV_FILE`.
 4. Run `/orgx-sync-skills` to pull OrgX skill pack locally.
-5. Run `/orgx-autopilot-start` to dispatch initiative tasks.
-6. Run `/orgx-autopilot-resume` to resume from the latest state file.
+5. Run `/orgx-sync-agents` to refresh OrgX Claude agent profiles.
+6. Run `/orgx-autopilot-start` to dispatch initiative tasks.
+7. Run `/orgx-autopilot-resume` to resume from the latest state file.
 
 ## Local Development
 
