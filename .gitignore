@@ -5,4 +5,5 @@ artifacts/
 *.log
 .claude/orgx.local.json
 .claude/orgx-skill-pack-state.json
+.claude/orgx-capability-cache.json
 .claude/orgx-skills/
