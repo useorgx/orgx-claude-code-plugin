@@ -20,6 +20,20 @@ import {
   defaultOrgxSkillsDir,
   syncOrgxSkillsFromServer,
 } from "../lib/skill-pack-sync.mjs";
+import {
+  inferTaskType,
+  buildBasePolicy,
+  formatPolicyForPrompt,
+  formatScoringInstructions,
+} from "../lib/capability-policy.mjs";
+import {
+  readCapabilityCache,
+  writeCapabilityCache,
+  getCachedPolicy,
+  setCachedPolicy,
+  recordPolicyScore,
+  pruneCache,
+} from "../lib/capability-cache.mjs";
 
 const DEFAULT_BASE_URL = "https://www.useorgx.com";
 const DEFAULT_CONCURRENCY = 4;
@@ -145,6 +159,19 @@ export function pickString(...values) {
     if (trimmed.length > 0) return trimmed;
   }
   return undefined;
+}
+
+export function normalizeSourceClient(value, fallback = "claude-code") {
+  const fallbackClient = pickString(fallback, "claude-code")?.toLowerCase() ?? "claude-code";
+  const raw = pickString(value);
+  if (!raw) return fallbackClient;
+
+  const normalized = raw.toLowerCase();
+  // Keep source_client machine-safe and human-readable for timeline attribution.
+  if (!/^[a-z][a-z0-9._-]{1,63}$/.test(normalized)) {
+    return fallbackClient;
+  }
+  return normalized;
 }
 
 function parseBoolean(value, fallback = false) {
@@ -336,10 +363,74 @@ export function deriveTaskExecutionPolicy(task = {}) {
   const defaultSkill = ORGX_SKILL_BY_DOMAIN[domain] ?? ORGX_SKILL_BY_DOMAIN.engineering;
   const requiredSkills = dedupeStrings([...explicitSkills, defaultSkill]);
 
+  const taskType = inferTaskType(task);
+
   return {
     domain,
     requiredSkills,
+    taskType,
   };
+}
+
+export async function resolveCapabilityPolicy({ task, taskPolicy, client, capabilityCache }) {
+  const cacheKey = getCachedPolicy(
+    buildBasePolicy({ task, domain: taskPolicy.domain, requiredSkills: taskPolicy.requiredSkills }).cacheKey,
+    capabilityCache
+  )?.cacheKey;
+
+  // Check local cache for a reusable policy
+  const basePolicyDraft = buildBasePolicy({
+    task,
+    domain: taskPolicy.domain,
+    requiredSkills: taskPolicy.requiredSkills,
+  });
+
+  const cached = getCachedPolicy(basePolicyDraft.cacheKey, capabilityCache);
+  if (cached && (cached.avgScore ?? 0) >= 70) {
+    return { policy: cached, cacheKey: basePolicyDraft.cacheKey, fromCache: true };
+  }
+
+  // Build fresh policy from static tables
+  const policy = basePolicyDraft;
+
+  // Best-effort: enrich with org learnings
+  try {
+    if (client?.getRelevantLearnings) {
+      const learnings = await client.getRelevantLearnings({
+        domain: taskPolicy.domain,
+        task_type: taskPolicy.taskType,
+      });
+      const items = Array.isArray(learnings?.learnings) ? learnings.learnings : [];
+      for (const learning of items.slice(0, 3)) {
+        const rec = typeof learning === "string" ? learning : learning?.recommendation;
+        if (rec && typeof rec === "string") {
+          policy.heuristics.push(rec);
+        }
+      }
+    }
+  } catch {
+    // best effort — learnings enrichment is non-critical
+  }
+
+  // Best-effort: classify model tier
+  let modelTier = null;
+  try {
+    if (client?.classifyTaskModel) {
+      const classification = await client.classifyTaskModel({
+        task_id: task.id,
+        domain: taskPolicy.domain,
+        task_type: taskPolicy.taskType,
+      });
+      modelTier = classification?.model_tier ?? null;
+    }
+  } catch {
+    // best effort
+  }
+
+  // Cache the policy locally
+  setCachedPolicy(policy.cacheKey, policy, capabilityCache);
+
+  return { policy, cacheKey: policy.cacheKey, fromCache: false, modelTier };
 }
 
 function isSpawnGuardUnsupportedError(error) {
@@ -667,6 +758,8 @@ export function buildClaudePrompt({
   requiredSkills,
   spawnGuardResult,
   skillDocs,
+  capabilityPolicy,
+  scoringInstructions,
 }) {
   const skillLine =
     Array.isArray(requiredSkills) && requiredSkills.length > 0
@@ -712,6 +805,7 @@ export function buildClaudePrompt({
     `- Spawn domain: ${taskDomain ?? "engineering"}`,
     `- Required OrgX skills: ${skillLine}`,
     `- Spawn guard model tier: ${pickString(spawnGuardResult?.modelTier) ?? "unknown"}`,
+    ...(capabilityPolicy ? [capabilityPolicy] : []),
     "",
     `Original Plan Reference: ${planPath ?? "none"}`,
     "Relevant Plan Excerpt:",
@@ -724,6 +818,7 @@ export function buildClaudePrompt({
     "1. Code/config/docs changes are implemented.",
     "2. Relevant checks/tests are run and reported.",
     "3. Output includes: changed files, checks run, and final result.",
+    ...(scoringInstructions ? [scoringInstructions] : []),
   ].join("\n");
 }
 
@@ -755,7 +850,11 @@ export function createReporter({
 
   function withRunContext(payload) {
     if (runId) {
-      return { ...payload, run_id: runId };
+      return {
+        ...payload,
+        run_id: runId,
+        source_client: sourceClient,
+      };
     }
     return {
       ...payload,
@@ -1492,7 +1591,10 @@ export async function main({
   const baseUrl = pickString(args.base_url, env.ORGX_BASE_URL, DEFAULT_BASE_URL)
     .replace(/\/+$/, "");
   const userId = pickString(args.user_id, env.ORGX_USER_ID);
-  const sourceClient = pickString(args.source_client, env.ORGX_SOURCE_CLIENT, "claude-code");
+  const sourceClient = normalizeSourceClient(
+    pickString(args.source_client, env.ORGX_SOURCE_CLIENT),
+    "claude-code"
+  );
   const correlationId = pickString(
     args.correlation_id,
     env.ORGX_CORRELATION_ID,
@@ -2007,6 +2109,8 @@ export async function main({
       console.warn(`[job] activity emit failed on startup: ${error.message}`);
     });
 
+  let capabilityCache = readCapabilityCache({ projectDir: pluginDir });
+
   while (pending.length > 0 || running.size > 0) {
     const now = Date.now();
     const resourceDecision = resourceGuard
@@ -2219,6 +2323,20 @@ export async function main({
         .map((skill) => loadSkillDoc(skill))
         .filter(Boolean);
 
+      // Resolve capability policy (best-effort enrichment from server)
+      let capPolicyResult = { policy: null, cacheKey: null, fromCache: false };
+      try {
+        capPolicyResult = await resolveCapabilityPolicy({
+          task,
+          taskPolicy,
+          client,
+          capabilityCache,
+        });
+      } catch {
+        // best effort — dispatch continues without capability policy
+      }
+      const capPolicyCacheKey = capPolicyResult.cacheKey;
+
       const prompt = buildClaudePrompt({
         task,
         planPath,
@@ -2233,6 +2351,13 @@ export async function main({
         requiredSkills: taskPolicy.requiredSkills,
         spawnGuardResult,
         skillDocs,
+        capabilityPolicy: capPolicyResult.policy
+          ? formatPolicyForPrompt(capPolicyResult.policy)
+          : null,
+        scoringInstructions: formatScoringInstructions({
+          taskId: task.id,
+          initiativeId,
+        }),
       });
 
       await reporter.emit({
@@ -2287,6 +2412,7 @@ export async function main({
           result: { code: 0, signal: null },
           dryRun: true,
           logPath: workerLogPath,
+          capPolicyCacheKey,
         });
         continue;
       }
@@ -2314,6 +2440,7 @@ export async function main({
         child: worker.child,
         killState: null,
         forcedFailure: null,
+        capPolicyCacheKey,
       });
 
       state.activeWorkers[task.id] = {
@@ -2333,6 +2460,7 @@ export async function main({
           result,
           logPath: workerLogPath,
           forcedFailure: runningEntry?.forcedFailure ?? null,
+          capPolicyCacheKey: runningEntry?.capPolicyCacheKey ?? null,
         });
       });
     }
@@ -2340,7 +2468,7 @@ export async function main({
     while (finishedEvents.length > 0) {
       const finished = finishedEvents.shift();
       if (!finished) continue;
-      const { task, attempt, result, logPath, forcedFailure } = finished;
+      const { task, attempt, result, logPath, forcedFailure, capPolicyCacheKey: finishedCacheKey } = finished;
       running.delete(task.id);
       delete state.activeWorkers[task.id];
 
@@ -2349,6 +2477,12 @@ export async function main({
       const failureKind = forcedFailure?.kind ?? (mcpHandshake ? "mcp_handshake" : null);
 
       const isSuccess = result.code === 0 && !forcedFailure;
+
+      // Record exit-code-based score in capability cache
+      if (finishedCacheKey) {
+        const score = isSuccess ? 80 : 25;
+        recordPolicyScore(finishedCacheKey, score, capabilityCache);
+      }
       if (isSuccess) {
         if (!completed.has(task.id)) {
           completedCount += 1;
@@ -2656,6 +2790,14 @@ export async function main({
   state.completed = completed.size;
   state.failed = failed.size;
   persistState(stateFile, state);
+
+  // Persist capability cache with pruning
+  try {
+    pruneCache(capabilityCache);
+    writeCapabilityCache(capabilityCache, { projectDir: pluginDir });
+  } catch {
+    // best effort — cache persistence is non-critical
+  }
 
   await reporter.emit({
     message: success

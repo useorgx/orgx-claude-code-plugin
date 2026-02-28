@@ -14,6 +14,10 @@
           },
           {
             "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/orgx-sync-agents.mjs --project_dir=\"${CLAUDE_PROJECT_DIR:-$PWD}\" --plugin_dir=\"${CLAUDE_PLUGIN_ROOT}\" --best_effort=true --quiet=true"
+          },
+          {
+            "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=session_start --source_client=claude-code --phase=intent --message=\"Claude session started\""
           }
         ]

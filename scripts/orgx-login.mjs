@@ -9,6 +9,10 @@ import {
   defaultOrgxSkillsDir,
   syncOrgxSkillsFromServer,
 } from "../lib/skill-pack-sync.mjs";
+import {
+  defaultOrgxAgentsDir,
+  syncOrgxAgentProfilesFromServer,
+} from "../lib/agent-profile-sync.mjs";
 
 const DEFAULT_BASE_URL = "https://www.useorgx.com";
 const DEFAULT_MCP_URL = "https://mcp.useorgx.com/mcp";
@@ -254,9 +258,16 @@ export async function main({ argv = process.argv.slice(2), env = process.env } =
   const pairTimeoutMs = Math.max(30_000, parseInteger(args.timeout_sec, 0) * 1000 || DEFAULT_PAIR_TIMEOUT_MS);
   const openBrowserEnabled = parseBoolean(args.open_browser, true);
   const syncSkills = parseBoolean(args.sync_skills, true);
+  const syncAgents = parseBoolean(args.sync_agents, true);
   const skillPackName = pickString(args.skill_pack_name, env.ORGX_SKILL_PACK_NAME, "orgx-agent-suite");
   const skillsDir = resolve(
     pickString(args.skills_dir, env.ORGX_SKILLS_DIR, defaultOrgxSkillsDir(projectDir))
+  );
+  const pluginDir = resolve(
+    pickString(args.plugin_dir, env.CLAUDE_PLUGIN_ROOT, projectDir)
+  );
+  const agentsDir = resolve(
+    pickString(args.agents_dir, env.ORGX_AGENTS_DIR, defaultOrgxAgentsDir(pluginDir))
   );
 
   let apiKey = pickString(args.api_key, env.ORGX_API_KEY);
@@ -345,6 +356,25 @@ export async function main({ argv = process.argv.slice(2), env = process.env } =
     }
   }
 
+  let agentSync = { attempted: false, notModified: false, agentCount: 0, error: null };
+  if (syncAgents) {
+    agentSync.attempted = true;
+    try {
+      const result = await syncOrgxAgentProfilesFromServer({
+        apiKey,
+        baseUrl,
+        userId,
+        packName: skillPackName,
+        projectDir,
+        agentsDir,
+      });
+      agentSync.notModified = Boolean(result.notModified);
+      agentSync.agentCount = result.agentCount ?? result.state?.agents?.length ?? 0;
+    } catch (error) {
+      agentSync.error = String(error?.message ?? error);
+    }
+  }
+
   console.log(`[orgx-login] Login saved. key=${maskKey(apiKey)} account=${account}`);
   console.log(`[orgx-login] Config: ${configPath}`);
   if (skillSync.attempted) {
@@ -354,6 +384,15 @@ export async function main({ argv = process.argv.slice(2), env = process.env } =
       console.log("[orgx-login] Skill pack already up-to-date.");
     } else {
       console.log(`[orgx-login] Synced ${skillSync.skillCount} skills to ${skillsDir}`);
+    }
+  }
+  if (agentSync.attempted) {
+    if (agentSync.error) {
+      console.warn(`[orgx-login] Agent sync warning: ${agentSync.error}`);
+    } else if (agentSync.notModified) {
+      console.log("[orgx-login] Agent pack already up-to-date.");
+    } else {
+      console.log(`[orgx-login] Synced ${agentSync.agentCount} agents to ${agentsDir}`);
     }
   }
   console.log(
@@ -368,6 +407,7 @@ export async function main({ argv = process.argv.slice(2), env = process.env } =
     keychainAccount: account,
     source: config.source,
     skillSync,
+    agentSync,
   };
 }
 
