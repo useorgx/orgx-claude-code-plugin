@@ -15,9 +15,16 @@ Build mode is the default unless explicitly switched to release mode.
 - Re-check `git status -sb` only before commits, branch switches, or destructive operations.
 - Batch related tasks (FE + BE + tests) when they share the same outcome.
 - Use requested tools when possible; if blocked, use a reliable fallback and note it briefly.
+- Solve-first behavior: attempt practical fixes and verification before asking for more user input.
 - Prefer small, progressive commits for long-running work.
 - Run targeted verification for touched files/surfaces only.
 - Do not block on full-suite checks during iterative development.
+
+### Problem-Solving-First Policy
+- Default posture is persistence: try to solve the issue end-to-end in the current turn.
+- When blocked, attempt at least one concrete fallback path before escalating.
+- Escalate early only for high-risk actions or true external blockers (permissions, missing credentials, production-risk decisions).
+- Do not stop at analysis if implementation is feasible; implement, verify, then report.
 
 ### Build-mode Verification
 - Backend changes: run targeted tests for changed modules.

@@ -24,6 +24,18 @@ export function pickString(...values) {
   return undefined;
 }
 
+export function normalizeSourceClient(value, fallback = "claude-code") {
+  const fallbackClient = pickString(fallback, "claude-code")?.toLowerCase() ?? "claude-code";
+  const raw = pickString(value);
+  if (!raw) return fallbackClient;
+
+  const normalized = raw.toLowerCase();
+  if (!/^[a-z][a-z0-9._-]{1,63}$/.test(normalized)) {
+    return fallbackClient;
+  }
+  return normalized;
+}
+
 async function postJson(url, payload, headers, fetchImpl = fetch) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
@@ -156,7 +168,10 @@ export async function main({
   const initiativeId = pickString(args.initiative, env.ORGX_INITIATIVE_ID);
   const apiKey = pickString(env.ORGX_API_KEY);
 
-  const sourceClient = pickString(args.source_client, env.ORGX_SOURCE_CLIENT, "claude-code");
+  const sourceClient = normalizeSourceClient(
+    pickString(args.source_client, env.ORGX_SOURCE_CLIENT),
+    "claude-code"
+  );
   const runId = pickString(args.run_id, env.ORGX_RUN_ID);
   const correlationId = runId
     ? undefined

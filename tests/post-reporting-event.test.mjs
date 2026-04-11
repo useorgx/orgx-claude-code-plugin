@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   parseArgs,
   pickString,
+  normalizeSourceClient,
   buildRuntimePayload,
   buildActivityPayload,
   buildCompletionChangesetPayload,
@@ -20,6 +21,13 @@ test("parseArgs parses key/value and boolean flags", () => {
 test("pickString returns first non-empty string", () => {
   assert.equal(pickString("", "   ", "value", "next"), "value");
   assert.equal(pickString("", " "), undefined);
+});
+
+test("normalizeSourceClient falls back for invalid values", () => {
+  assert.equal(normalizeSourceClient("claude-code"), "claude-code");
+  assert.equal(normalizeSourceClient("ORGX.CLI"), "orgx.cli");
+  assert.equal(normalizeSourceClient("5"), "claude-code");
+  assert.equal(normalizeSourceClient("bad source"), "claude-code");
 });
 
 test("payload builders shape expected OrgX fields", () => {
@@ -117,4 +125,37 @@ test("main posts activity and completion changeset", async () => {
   assert.equal(calls[0].url, "https://www.useorgx.com/api/client/live/activity");
   assert.equal(calls[1].url, "https://www.useorgx.com/api/client/live/changesets/apply");
   assert.equal(calls[0].init.headers.Authorization, "Bearer oxk_test");
+});
+
+test("main normalizes invalid ORGX_SOURCE_CLIENT env value", async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => {
+    calls.push({ url, init });
+    return {
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      async json() {
+        return { ok: true };
+      },
+      async text() {
+        return "";
+      },
+    };
+  };
+
+  const result = await main({
+    argv: ["--event=post_tool_use", "--message=hello"],
+    env: {
+      ORGX_API_KEY: "oxk_test",
+      ORGX_INITIATIVE_ID: "init-1",
+      ORGX_SOURCE_CLIENT: "5",
+      ORGX_BASE_URL: "https://www.useorgx.com",
+    },
+    fetchImpl,
+  });
+
+  assert.equal(result.ok, true);
+  const payload = JSON.parse(calls[0].init.body);
+  assert.equal(payload.source_client, "claude-code");
 });
