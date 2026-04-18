@@ -1,17 +1,29 @@
 {
   "name": "@useorgx/claude-code-plugin",
   "version": "0.1.1",
-  "description": "OrgX Claude Code plugin with MCP + runtime telemetry hooks",
+  "description": "OrgX Claude Code plugin with MCP + runtime telemetry hooks + Sovereign Execution peer sidecar",
   "type": "module",
   "private": true,
+  "bin": {
+    "orgx-claude-code-peer": "lib/peer/cli.mjs"
+  },
+  "exports": {
+    ".": "./lib/peer/peer.mjs",
+    "./peer": "./lib/peer/peer.mjs"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs lib/peer/peer.test.mjs",
+    "test:peer": "node --test lib/peer/peer.test.mjs",
     "verify": "node scripts/verify-plugin.mjs",
     "check": "npm run typecheck && npm run test && npm run verify",
     "pack": "mkdir -p artifacts && npm pack --pack-destination artifacts",
     "release:dry-run": "node scripts/release-dry-run.mjs",
-    "dev:claude": "claude --plugin-dir ."
+    "dev:claude": "claude --plugin-dir .",
+    "peer:start": "node lib/peer/cli.mjs"
+  },
+  "dependencies": {
+    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

@@ -1,0 +1,9 @@
+{
+  "plugin_name": "@useorgx/claude-code-plugin",
+  "version": "0.1.1",
+  "manifest_fingerprint": "",
+  "signature": "",
+  "capabilities": ["gateway:drive", "plugin:heartbeat"],
+  "driver_ids": ["claude_code"],
+  "notes": "fingerprint + signature are populated by an npm prepublish step; dev builds ship unsigned and receive 'degraded' status from the OrgX server's license heartbeat in permissive mode."
+}
