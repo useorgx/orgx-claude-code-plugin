@@ -56,6 +56,17 @@ for (const eventName of ["SessionStart", "PostToolUse", "SubagentStop", "Stop"])
   if (!Array.isArray(hooks.hooks[eventName])) fail(`hooks.${eventName} must be an array`);
 }
 
+const hookScript = readFileSync(hookScriptPath, "utf8");
+if (!hookScript.includes("orgx_claude_code_plugin_runtime_hook")) {
+  fail("hook script must emit orgx_claude_code_plugin_runtime_hook records");
+}
+if (!hookScript.includes("ORGX_WIZARD_HOOK_OUTBOX")) {
+  fail("hook script must support ORGX_WIZARD_HOOK_OUTBOX");
+}
+if (hookScript.includes("appendFileSync(outbox, stdinText")) {
+  fail("hook script must not persist raw hook stdin");
+}
+
 console.log("verify-plugin: ok");
 console.log(`manifest: ${manifest.name}@${manifest.version}`);
 console.log(`mcp server: ${orgxServer.url}`);
