@@ -2,7 +2,8 @@
 
 Claude Code plugin package for OrgX:
 - OrgX MCP server wiring (`mcp.useorgx.com`)
-- Runtime hooks that post activity/progress back to OrgX
+- Runtime hooks that post activity/progress back to OrgX and spool compact Work
+  Graph events for reconciliation
 - Browser pairing login (`/orgx-login`) with macOS keychain storage
 - Session env hydration from keychain (`hooks/scripts/load-orgx-env.mjs`)
 - Skill-pack sync from OrgX to local `SKILL.md` files (`/orgx-sync-skills`)
@@ -45,6 +46,8 @@ skills/**/SKILL.md           # Reusable guidance
 - `ORGX_SKILLS_DIR` (optional skills root override; default `.claude/orgx-skills`)
 - `ORGX_SKILL_PACK_NAME` (optional; default `orgx-agent-suite`)
 - `ORGX_RUNTIME_HOOK_URL` and `ORGX_HOOK_TOKEN` (optional local runtime relay)
+- `ORGX_WIZARD_HOOK_OUTBOX` (optional local JSONL outbox; default
+  `~/.config/useorgx/wizard/hooks/events.jsonl`)
 
 ## Login + Autopilot
 
@@ -100,8 +103,12 @@ claude --plugin-dir . --permission-mode bypassPermissions -p "Use the orgx_statu
 - activity events -> `/api/client/live/activity`
 - optional completion changeset -> `/api/client/live/changesets/apply`
 - optional local runtime relay -> `ORGX_RUNTIME_HOOK_URL`
+- compact, redacted Work Graph hook events -> local wizard outbox
 
 The script is best-effort and exits cleanly on failures to avoid interrupting Claude sessions.
+It never writes raw transcripts or full hook payloads; the reconciler should keep
+raw client history local and promote only redacted summaries, evidence refs,
+Work Graph fingerprints, and approved OrgX activity.
 
 ## Next Steps
 
