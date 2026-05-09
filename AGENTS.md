@@ -31,6 +31,24 @@ Build mode is the default unless explicitly switched to release mode.
 - Frontend changes: run focused desktop/mobile smoke checks for changed flows.
 - Always label verification scope explicitly: `targeted`, `partial`, or `full`.
 
+## Codex Cloud Environment
+
+Use the checked-in setup scripts when configuring this repo in Codex cloud:
+
+```bash
+bash .codex/setup-cloud.sh
+```
+
+Use this as the cached-environment maintenance script:
+
+```bash
+bash .codex/maintenance-cloud.sh
+```
+
+The setup script installs from `package-lock.json` with `npm ci --include=dev`
+and runs `npm run check`. No OrgX API secrets are required for static plugin
+verification.
+
 ## Strict Mode: Release Mode
 Release mode is required for any PR merge, tag/release, or production-impacting action.
 
