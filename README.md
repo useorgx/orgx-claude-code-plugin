@@ -14,7 +14,8 @@ Claude Code plugin package for OrgX:
 
 ## Repo
 
-- Path: `/Users/hopeatina/Code/orgx-claude-code-plugin`
+- Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
+- License: MIT
 - Initiative: `9b543d86-ea3e-47b8-8109-7160547f2745`
 - Live view: `https://useorgx.com/live/9b543d86-ea3e-47b8-8109-7160547f2745`
 
@@ -112,7 +113,7 @@ Work Graph fingerprints, and approved OrgX activity.
 
 ## Next Steps
 
-- Add marketplace metadata and publishing pipeline.
+- Submit to the Claude plugin directory after `claude plugin validate .` passes.
 - Add E2E harness for real Claude CLI sessions and OrgX assertion checks.
 - Extract reusable shared core from OpenClaw plugin into a standalone package.
 
