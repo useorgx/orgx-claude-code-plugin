@@ -1,0 +1,46 @@
+{
+  "name": "orgx",
+  "description": "OrgX Claude Code plugins for agent memory, runtime telemetry, skill sync, and Work Graph orchestration.",
+  "version": "0.1.0",
+  "metadata": {
+    "description": "OrgX Claude Code plugins for agent memory, runtime telemetry, skill sync, and Work Graph orchestration.",
+    "version": "0.1.0"
+  },
+  "owner": {
+    "name": "OrgX Team",
+    "email": "reviewers@useorgx.com"
+  },
+  "plugins": [
+    {
+      "name": "orgx-claude-code-plugin",
+      "description": "OrgX MCP tools, runtime telemetry hooks, skill sync, and agent dispatch orchestration for Claude Code.",
+      "source": {
+        "source": "github",
+        "repo": "useorgx/orgx-claude-code-plugin"
+      },
+      "version": "0.1.2",
+      "author": {
+        "name": "OrgX Team",
+        "email": "reviewers@useorgx.com"
+      },
+      "homepage": "https://useorgx.com",
+      "repository": "https://github.com/useorgx/orgx-claude-code-plugin",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "orgx",
+        "mcp",
+        "agents",
+        "work-graph",
+        "runtime-telemetry",
+        "skills"
+      ],
+      "tags": [
+        "mcp",
+        "agent-memory",
+        "runtime-reporting",
+        "skill-sync"
+      ]
+    }
+  ]
+}

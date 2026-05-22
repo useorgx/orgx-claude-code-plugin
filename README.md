@@ -98,6 +98,27 @@ claude --plugin-dir . -p "Reply with exactly: plugin-smoke-ok"
 claude --plugin-dir . --permission-mode bypassPermissions -p "Use the orgx_status_json MCP tool and return one-line summary."
 ```
 
+## Claude Code Marketplace
+
+This repo also hosts the self-serve OrgX Claude Code marketplace catalog at
+`.claude-plugin/marketplace.json`.
+
+Add the marketplace:
+
+```text
+/plugin marketplace add useorgx/orgx-claude-code-plugin
+```
+
+Install the plugin:
+
+```text
+/plugin install orgx-claude-code-plugin@orgx
+```
+
+Run `/orgx-login` after installation to pair a workspace and store the OrgX API
+key in the local keychain. The hosted MCP endpoint defaults to
+`https://mcp.useorgx.com/mcp`.
+
 ## Hook Behavior
 
 `hooks/scripts/post-reporting-event.mjs` posts:
@@ -113,7 +134,7 @@ Work Graph fingerprints, and approved OrgX activity.
 
 ## Next Steps
 
-- Submit to the Claude plugin directory after `claude plugin validate .` passes.
+- Submit to the Claude plugin directory after explicit submitter authorization.
 - Add E2E harness for real Claude CLI sessions and OrgX assertion checks.
 - Extract reusable shared core from OpenClaw plugin into a standalone package.
 
