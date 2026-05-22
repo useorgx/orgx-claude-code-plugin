@@ -10,10 +10,11 @@ function fail(message) {
 
 const root = process.cwd();
 const manifestPath = resolve(root, ".claude-plugin", "plugin.json");
+const marketplacePath = resolve(root, ".claude-plugin", "marketplace.json");
 const hooksPath = resolve(root, "hooks", "hooks.json");
 const hookScriptPath = resolve(root, "hooks", "scripts", "post-reporting-event.mjs");
 
-for (const path of [manifestPath, hooksPath, hookScriptPath]) {
+for (const path of [manifestPath, marketplacePath, hooksPath, hookScriptPath]) {
   if (!existsSync(path)) fail(`missing file: ${path}`);
 }
 
@@ -44,6 +45,37 @@ if (typeof orgxServer.url !== "string" || orgxServer.url.trim().length === 0) {
   fail("mcpServers.orgx.url must be a non-empty string");
 }
 
+let marketplace;
+try {
+  marketplace = JSON.parse(readFileSync(marketplacePath, "utf8"));
+} catch (error) {
+  fail(`invalid JSON in ${marketplacePath}: ${String(error)}`);
+}
+
+if (marketplace.name !== "orgx") fail("marketplace name must be orgx");
+if (typeof marketplace.description !== "string" || marketplace.description.trim().length === 0) {
+  fail("marketplace missing description");
+}
+if (!marketplace.owner || marketplace.owner.name !== "OrgX Team") {
+  fail("marketplace owner must identify OrgX Team");
+}
+if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
+  fail("marketplace must list at least one plugin");
+}
+
+const marketplacePlugin = marketplace.plugins.find((plugin) => plugin.name === manifest.name);
+if (!marketplacePlugin) fail(`marketplace must list ${manifest.name}`);
+if (marketplacePlugin.version !== manifest.version) {
+  fail(`marketplace plugin version ${marketplacePlugin.version} must match manifest ${manifest.version}`);
+}
+if (marketplacePlugin.license !== "MIT") fail("marketplace plugin license must be MIT");
+if (marketplacePlugin.repository !== "https://github.com/useorgx/orgx-claude-code-plugin") {
+  fail("marketplace plugin repository must point to the public OrgX Claude Code plugin repo");
+}
+if (marketplacePlugin.source?.source !== "github" || marketplacePlugin.source?.repo !== "useorgx/orgx-claude-code-plugin") {
+  fail("marketplace plugin source must use the public GitHub repository");
+}
+
 let hooks;
 try {
   hooks = JSON.parse(readFileSync(hooksPath, "utf8"));
@@ -69,4 +101,5 @@ if (hookScript.includes("appendFileSync(outbox, stdinText")) {
 
 console.log("verify-plugin: ok");
 console.log(`manifest: ${manifest.name}@${manifest.version}`);
+console.log(`marketplace: ${marketplace.name}/${marketplacePlugin.name}`);
 console.log(`mcp server: ${orgxServer.url}`);
