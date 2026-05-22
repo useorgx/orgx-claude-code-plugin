@@ -4,6 +4,11 @@
   "description": "OrgX Claude Code plugin with MCP, runtime telemetry hooks, Work Graph reconciliation, and Sovereign Execution peer sidecar",
   "type": "module",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/useorgx/orgx-claude-code-plugin.git"
+  },
   "bin": {
     "orgx-claude-code-peer": "lib/peer/cli.mjs"
   },
