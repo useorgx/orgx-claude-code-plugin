@@ -10,8 +10,22 @@
     "url": "git+https://github.com/useorgx/orgx-claude-code-plugin.git"
   },
   "bin": {
-    "orgx-claude-code-peer": "lib/peer/cli.mjs"
+    "orgx-claude-code-peer": "lib/peer/cli.mjs",
+    "orgx-claude-code-reconcile-hooks": "hooks/scripts/orgx-work-graph-reconcile.mjs"
   },
+  "files": [
+    ".claude-plugin/",
+    ".github/",
+    "agents/",
+    "commands/",
+    "docs/",
+    "hooks/",
+    "lib/",
+    "scripts/",
+    "skills/",
+    "README.md",
+    "tsconfig.json"
+  ],
   "exports": {
     ".": "./lib/peer/peer.mjs",
     "./peer": "./lib/peer/peer.mjs"
