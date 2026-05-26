@@ -9,13 +9,22 @@ function fail(message) {
 }
 
 const root = process.cwd();
+const packagePath = resolve(root, "package.json");
 const manifestPath = resolve(root, ".claude-plugin", "plugin.json");
 const marketplacePath = resolve(root, ".claude-plugin", "marketplace.json");
 const hooksPath = resolve(root, "hooks", "hooks.json");
 const hookScriptPath = resolve(root, "hooks", "scripts", "post-reporting-event.mjs");
+const hookReconcilerPath = resolve(root, "hooks", "scripts", "orgx-work-graph-reconcile.mjs");
 
-for (const path of [manifestPath, marketplacePath, hooksPath, hookScriptPath]) {
+for (const path of [packagePath, manifestPath, marketplacePath, hooksPath, hookScriptPath, hookReconcilerPath]) {
   if (!existsSync(path)) fail(`missing file: ${path}`);
+}
+
+let pkg;
+try {
+  pkg = JSON.parse(readFileSync(packagePath, "utf8"));
+} catch (error) {
+  fail(`invalid JSON in ${packagePath}: ${String(error)}`);
 }
 
 let manifest;
@@ -29,6 +38,9 @@ for (const key of ["name", "version", "description"]) {
   if (typeof manifest[key] !== "string" || manifest[key].trim().length === 0) {
     fail(`manifest missing string field: ${key}`);
   }
+}
+if (pkg.version !== manifest.version) {
+  fail("package.json version must match .claude-plugin/plugin.json version");
 }
 
 if (!manifest.mcpServers || typeof manifest.mcpServers !== "object") {
@@ -97,6 +109,44 @@ if (!hookScript.includes("ORGX_WIZARD_HOOK_OUTBOX")) {
 }
 if (hookScript.includes("appendFileSync(outbox, stdinText")) {
   fail("hook script must not persist raw hook stdin");
+}
+if (
+  !pkg.bin ||
+  pkg.bin["orgx-claude-code-reconcile-hooks"] !==
+    "hooks/scripts/orgx-work-graph-reconcile.mjs"
+) {
+  fail("package bin must expose orgx-claude-code-reconcile-hooks");
+}
+if (!Array.isArray(pkg.files)) {
+  fail("package.json must define a publish files allowlist");
+}
+for (const expectedPath of [
+  ".claude-plugin/",
+  "hooks/",
+  "lib/",
+  "scripts/",
+  "skills/",
+]) {
+  if (!pkg.files.includes(expectedPath)) {
+    fail(`package files allowlist missing ${expectedPath}`);
+  }
+}
+for (const forbiddenPath of [".agents/", ".agent/", ".codex/"]) {
+  if (pkg.files.includes(forbiddenPath)) {
+    fail(`package files allowlist must not include local mirror ${forbiddenPath}`);
+  }
+}
+
+const reconciler = readFileSync(hookReconcilerPath, "utf8");
+for (const expected of [
+  "work_graph_fingerprint",
+  "signup_hydration",
+  "raw_transcripts_sent: false",
+  "raw_transcripts_excluded: true",
+]) {
+  if (!reconciler.includes(expected)) {
+    fail(`hook reconciler must include ${expected}`);
+  }
 }
 
 console.log("verify-plugin: ok");

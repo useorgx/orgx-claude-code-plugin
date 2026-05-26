@@ -199,6 +199,8 @@ export function buildWorkGraphHookRecord({
     payload.sessionId,
     payload.conversation_id,
     payload.conversationId,
+    payload.thread_id,
+    payload.threadId,
     args.session_id,
     args.sessionId
   );

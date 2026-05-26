@@ -192,7 +192,7 @@ test("buildWorkGraphHookRecord emits redacted reconciliation metadata", () => {
   const record = buildWorkGraphHookRecord({
     args: { task_id: "task-1", run_id: "run-1" },
     payload: {
-      session_id: "sess-1",
+      thread_id: "thread-1",
       transcript_path: "/tmp/transcript.jsonl",
       prompt: "do the work",
       secret: "do-not-copy",
@@ -205,7 +205,7 @@ test("buildWorkGraphHookRecord emits redacted reconciliation metadata", () => {
 
   assert.equal(record.source, "orgx_claude_code_plugin_runtime_hook");
   assert.equal(record.source_client, "claude-code");
-  assert.equal(record.session_id, "sess-1");
+  assert.equal(record.session_id, "thread-1");
   assert.equal(record.summary.prompt_chars, 11);
   assert.equal(record.summary.task_id, "task-1");
   assert.equal(JSON.stringify(record).includes("do the work"), false);

@@ -31,6 +31,7 @@ Claude Code plugin package for OrgX:
 .claude-plugin/plugin.json   # Claude plugin manifest
 hooks/hooks.json             # Claude hook declarations
 hooks/scripts/post-reporting-event.mjs
+hooks/scripts/orgx-work-graph-reconcile.mjs
 commands/*.md                # Slash commands
 agents/*.md                  # Subagent profiles
 skills/**/SKILL.md           # Reusable guidance
@@ -131,6 +132,20 @@ The script is best-effort and exits cleanly on failures to avoid interrupting Cl
 It never writes raw transcripts or full hook payloads; the reconciler should keep
 raw client history local and promote only redacted summaries, evidence refs,
 Work Graph fingerprints, and approved OrgX activity.
+
+Dry-run reconciliation does not require OrgX credentials:
+
+```bash
+orgx-claude-code-reconcile-hooks \
+  --outbox ~/.config/useorgx/wizard/hooks/events.jsonl \
+  --output /tmp/orgx-work-graph-report.json
+```
+
+Publishing is explicit:
+
+```bash
+ORGX_API_KEY=oxk_... orgx-claude-code-reconcile-hooks --post
+```
 
 ## Next Steps
 
