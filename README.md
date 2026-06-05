@@ -130,6 +130,10 @@ key in the local keychain. The hosted MCP endpoint defaults to
 - optional local runtime relay -> `ORGX_RUNTIME_HOOK_URL`
 - compact, redacted Work Graph hook events -> local wizard outbox
 
+The `Stop` hook then runs `hooks/scripts/orgx-reconcile-hook.mjs`, which turns
+the local outbox into a summary-only Work Graph report at
+`~/.config/useorgx/wizard/hooks/reports/latest-work-graph-report.json`.
+
 The script is best-effort and exits cleanly on failures to avoid interrupting Claude sessions.
 It never writes raw transcripts or full hook payloads; the reconciler should keep
 raw client history local and promote only redacted summaries, evidence refs,
@@ -148,10 +152,13 @@ orgx-claude-code-reconcile-hooks \
   --output /tmp/orgx-work-graph-report.json
 ```
 
-Publishing is explicit:
+Automatic Stop reconciliation writes locally by default. Publishing is explicit
+and requires both an API key and an opt-in flag such as
+`ORGX_CLAUDE_HOOK_RECONCILE_POST=true`:
 
 ```bash
-ORGX_API_KEY=oxk_... orgx-claude-code-reconcile-hooks --post
+ORGX_CLAUDE_HOOK_RECONCILE_POST=true ORGX_API_KEY=oxk_... \
+  orgx-claude-code-reconcile-hooks --post
 ```
 
 ## Next Steps

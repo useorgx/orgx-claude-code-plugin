@@ -15,6 +15,7 @@ const marketplacePath = resolve(root, ".claude-plugin", "marketplace.json");
 const hooksPath = resolve(root, "hooks", "hooks.json");
 const hookScriptPath = resolve(root, "hooks", "scripts", "post-reporting-event.mjs");
 const hookReconcilerPath = resolve(root, "hooks", "scripts", "orgx-work-graph-reconcile.mjs");
+const hookReconcileWrapperPath = resolve(root, "hooks", "scripts", "orgx-reconcile-hook.mjs");
 const operatorChronicleCommandPath = resolve(root, "commands", "orgx-operator-chronicle.md");
 
 for (const path of [
@@ -24,6 +25,7 @@ for (const path of [
   hooksPath,
   hookScriptPath,
   hookReconcilerPath,
+  hookReconcileWrapperPath,
   operatorChronicleCommandPath,
 ]) {
   if (!existsSync(path)) fail(`missing file: ${path}`);
@@ -117,6 +119,24 @@ if (!hooks.hooks || typeof hooks.hooks !== "object") fail("hooks/hooks.json miss
 for (const eventName of ["SessionStart", "PostToolUse", "SubagentStop", "Stop"]) {
   if (!Array.isArray(hooks.hooks[eventName])) fail(`hooks.${eventName} must be an array`);
 }
+const stopHookCommands = hooks.hooks.Stop.flatMap((entry) =>
+  Array.isArray(entry.hooks)
+    ? entry.hooks.map((hook) => (typeof hook.command === "string" ? hook.command : ""))
+    : []
+);
+if (!stopHookCommands.some((command) => command.includes("post-reporting-event.mjs"))) {
+  fail("Stop hook must record a compact runtime event");
+}
+if (
+  !stopHookCommands.some(
+    (command) =>
+      command.includes("orgx-reconcile-hook.mjs") &&
+      command.includes("--event=stop") &&
+      command.includes("--source_client=claude-code")
+  )
+) {
+  fail("Stop hook must run local Work Graph reconciliation for claude-code");
+}
 
 const hookScript = readFileSync(hookScriptPath, "utf8");
 if (!hookScript.includes("orgx_claude_code_plugin_runtime_hook")) {
@@ -165,6 +185,22 @@ for (const expected of [
   if (!reconciler.includes(expected)) {
     fail(`hook reconciler must include ${expected}`);
   }
+}
+
+const reconcileWrapper = readFileSync(hookReconcileWrapperPath, "utf8");
+for (const expected of [
+  "latest-work-graph-report.json",
+  "ORGX_CLAUDE_HOOK_RECONCILE_POST",
+  "ORGX_HOOK_RECONCILE_POST",
+  "ORGX_WIZARD_HOOK_RECONCILE_POST",
+  "process.exit(0)",
+]) {
+  if (!reconcileWrapper.includes(expected)) {
+    fail(`hook reconcile wrapper must include ${expected}`);
+  }
+}
+if (reconcileWrapper.includes("process.exit(1)")) {
+  fail("hook reconcile wrapper must not block Claude sessions with process.exit(1)");
 }
 
 for (const file of [

@@ -52,6 +52,10 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/post-reporting-event.mjs --event=stop --source_client=claude-code --phase=completed --message=\"Claude session completed\" --apply_completion=true"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/orgx-reconcile-hook.mjs --event=stop --source_client=claude-code"
           }
         ]
       }

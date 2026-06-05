@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -236,4 +237,25 @@ test("main spools Work Graph event even when live API is unavailable", async () 
   assert.equal(event.source, "orgx_claude_code_plugin_runtime_hook");
   assert.equal(event.event, "stop");
   assert.equal(event.summary.prompt_chars, 5);
+});
+
+test("configured Stop hooks record and reconcile Claude Work Graph evidence", () => {
+  const hooks = JSON.parse(readFileSync(new URL("../hooks/hooks.json", import.meta.url), "utf8"));
+  const stopCommands = hooks.hooks.Stop.flatMap((entry) =>
+    Array.isArray(entry.hooks) ? entry.hooks.map((hook) => hook.command || "") : []
+  );
+
+  assert.equal(
+    stopCommands.some((command) => command.includes("post-reporting-event.mjs")),
+    true
+  );
+  assert.equal(
+    stopCommands.some(
+      (command) =>
+        command.includes("orgx-reconcile-hook.mjs") &&
+        command.includes("--event=stop") &&
+        command.includes("--source_client=claude-code")
+    ),
+    true
+  );
 });

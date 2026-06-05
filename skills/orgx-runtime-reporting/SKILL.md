@@ -19,7 +19,8 @@ There are two reporting paths:
   present the returned `reportingNarrative.briefMarkdown`. Do not ask the user
   to reconnect before giving the report.
 - **Passive backstop:** Claude Code runtime hooks record compact session events
-  into the local OrgX wizard outbox for later Work Graph reconciliation.
+  into the local OrgX wizard outbox and run summary-only local Work Graph
+  reconciliation on `Stop`.
 
 Do not treat hook presence as a substitute for intentional OrgX writes. Hooks
 answer whether OrgX was used; MCP/API calls make the work durable while the
@@ -69,6 +70,11 @@ session is still fresh.
 - When a Work Graph report is generated, include its `work_graph_fingerprint`
   and `signup_hydration.hydration_key` in summaries or artifacts that are safe
   to store.
+- Claude Code Stop-hook reconciliation writes
+  `~/.config/useorgx/wizard/hooks/reports/latest-work-graph-report.json` by
+  default. Posting that report to OrgX is opt-in and requires both an OrgX API
+  key and `ORGX_CLAUDE_HOOK_RECONCILE_POST=true`,
+  `ORGX_HOOK_RECONCILE_POST=true`, or `ORGX_WIZARD_HOOK_RECONCILE_POST=true`.
 - Treat the fingerprint as the durable claim key that lets OrgX hydrate
   pre-signup audit value into a user's future workspace.
 - Never derive the fingerprint from secrets or raw transcripts that would need
