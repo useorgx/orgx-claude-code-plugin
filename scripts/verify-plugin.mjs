@@ -15,8 +15,17 @@ const marketplacePath = resolve(root, ".claude-plugin", "marketplace.json");
 const hooksPath = resolve(root, "hooks", "hooks.json");
 const hookScriptPath = resolve(root, "hooks", "scripts", "post-reporting-event.mjs");
 const hookReconcilerPath = resolve(root, "hooks", "scripts", "orgx-work-graph-reconcile.mjs");
+const operatorChronicleCommandPath = resolve(root, "commands", "orgx-operator-chronicle.md");
 
-for (const path of [packagePath, manifestPath, marketplacePath, hooksPath, hookScriptPath, hookReconcilerPath]) {
+for (const path of [
+  packagePath,
+  manifestPath,
+  marketplacePath,
+  hooksPath,
+  hookScriptPath,
+  hookReconcilerPath,
+  operatorChronicleCommandPath,
+]) {
   if (!existsSync(path)) fail(`missing file: ${path}`);
 }
 
@@ -41,6 +50,12 @@ for (const key of ["name", "version", "description"]) {
 }
 if (pkg.version !== manifest.version) {
   fail("package.json version must match .claude-plugin/plugin.json version");
+}
+if (!pkg.description.includes("operator chronicle reporting")) {
+  fail("package description must mention operator chronicle reporting");
+}
+if (!manifest.description.includes("operator chronicle reporting")) {
+  fail("manifest description must mention operator chronicle reporting");
 }
 
 if (!manifest.mcpServers || typeof manifest.mcpServers !== "object") {
@@ -79,6 +94,9 @@ const marketplacePlugin = marketplace.plugins.find((plugin) => plugin.name === m
 if (!marketplacePlugin) fail(`marketplace must list ${manifest.name}`);
 if (marketplacePlugin.version !== manifest.version) {
   fail(`marketplace plugin version ${marketplacePlugin.version} must match manifest ${manifest.version}`);
+}
+if (!marketplacePlugin.description.includes("operator chronicle reporting")) {
+  fail("marketplace plugin description must mention operator chronicle reporting");
 }
 if (marketplacePlugin.license !== "MIT") fail("marketplace plugin license must be MIT");
 if (marketplacePlugin.repository !== "https://github.com/useorgx/orgx-claude-code-plugin") {
@@ -146,6 +164,21 @@ for (const expected of [
 ]) {
   if (!reconciler.includes(expected)) {
     fail(`hook reconciler must include ${expected}`);
+  }
+}
+
+for (const file of [
+  "README.md",
+  "commands/orgx-operator-chronicle.md",
+  "commands/orgx-status.md",
+  "skills/orgx-runtime-reporting/SKILL.md",
+]) {
+  const text = readFileSync(resolve(root, file), "utf8");
+  if (!text.includes("get_operator_chronicle")) {
+    fail(`${file} must route reporting through get_operator_chronicle`);
+  }
+  if (!text.includes("orgx_recommend") || !text.includes('mode: "morning_brief"')) {
+    fail(`${file} must document the orgx_recommend morning_brief stale-client fallback`);
   }
 }
 

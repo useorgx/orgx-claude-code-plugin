@@ -2,6 +2,8 @@
 
 Claude Code plugin package for OrgX:
 - OrgX MCP server wiring (`mcp.useorgx.com`)
+- Operator chronicle reporting for yesterday, week, 30-day decisions, artifacts,
+  PR velocity, goals, initiatives, data gaps, and top priorities
 - Runtime hooks that post activity/progress back to OrgX and spool compact Work
   Graph events for reconciliation
 - Browser pairing login (`/orgx-login`) with macOS keychain storage
@@ -132,6 +134,11 @@ The script is best-effort and exits cleanly on failures to avoid interrupting Cl
 It never writes raw transcripts or full hook payloads; the reconciler should keep
 raw client history local and promote only redacted summaries, evidence refs,
 Work Graph fingerprints, and approved OrgX activity.
+
+For live reporting, use MCP before hooks: `get_operator_chronicle` is the
+preferred tool when Claude Code exposes it. If Claude Code has a stale MCP tool
+list, use `orgx_recommend` with `mode: "morning_brief"` and present
+`reportingNarrative.briefMarkdown`.
 
 Dry-run reconciliation does not require OrgX credentials:
 
