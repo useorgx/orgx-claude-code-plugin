@@ -56,6 +56,10 @@
           {
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/orgx-reconcile-hook.mjs --event=stop --source_client=claude-code"
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/emit-execution-graph.mjs"
           }
         ]
       }
