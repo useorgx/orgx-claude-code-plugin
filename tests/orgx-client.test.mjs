@@ -110,3 +110,47 @@ test("getRelevantLearnings returns raw response when no data wrapper", async () 
     restore();
   }
 });
+
+test("emitExecutionGraph posts to /api/client/live/execution-graph and unwraps data", async () => {
+  const { fetchImpl, calls } = mockFetch([
+    {
+      status: 200,
+      body: {
+        data: {
+          execution_graph_fingerprint: "xgf_abc",
+          trust_signals: [{ violation_type: "false_completion" }],
+        },
+      },
+    },
+  ]);
+  const { client, restore } = createTestClient(fetchImpl);
+  try {
+    const result = await client.emitExecutionGraph({
+      initiative_id: "init-1",
+      run_id: "run-1",
+      nodes: [
+        {
+          id: "a",
+          type: "task",
+          title: "Build",
+          status: "completed",
+          requires_evidence: true,
+          verification: { state: "failed", evidence_ref: "test#9" },
+        },
+      ],
+    });
+
+    assert.equal(calls.length, 1);
+    assert.ok(calls[0].url.includes("/api/client/live/execution-graph"));
+    assert.equal(calls[0].options.method, "POST");
+
+    const sentBody = JSON.parse(calls[0].options.body);
+    assert.equal(sentBody.initiative_id, "init-1");
+    assert.equal(sentBody.nodes[0].id, "a");
+
+    assert.equal(result.execution_graph_fingerprint, "xgf_abc");
+    assert.equal(result.trust_signals[0].violation_type, "false_completion");
+  } finally {
+    restore();
+  }
+});
