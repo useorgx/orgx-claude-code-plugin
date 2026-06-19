@@ -10,6 +10,10 @@
           },
           {
             "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/hydrate-context-pack.mjs"
+          },
+          {
+            "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/orgx-sync-skills.mjs --project_dir=\"${CLAUDE_PROJECT_DIR:-$PWD}\" --best_effort=true --quiet=true"
           },
           {
