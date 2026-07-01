@@ -10,6 +10,7 @@
     "orgx": {
       "type": "http",
       "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp}",
+      "note": "Hosted OrgX MCP. Use orgx_memory_context with client=\"claude_code\" for source-backed memory projections; direct tool-call proof is required before treating memory as live.",
       "headers": {
         "Authorization": "Bearer ${ORGX_API_KEY:-}",
         "X-Orgx-User-Id": "${ORGX_USER_ID:-}"

@@ -2,6 +2,9 @@
 
 import process from "node:process";
 import { pathToFileURL } from "node:url";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { homedir } from "node:os";
 
 export function parseArgs(argv) {
   const args = {};
@@ -34,6 +37,100 @@ export function normalizeSourceClient(value, fallback = "claude-code") {
     return fallbackClient;
   }
   return normalized;
+}
+
+export async function readStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+export function parseJson(value) {
+  try {
+    const parsed = JSON.parse(value || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export function summarizeHookPayload(payload, args = {}) {
+  const toolName = pickString(
+    args.tool_name,
+    payload.tool_name,
+    payload.toolName,
+    payload.tool?.name,
+    payload.name
+  );
+  const prompt = pickString(payload.prompt, payload.user_prompt, payload.message);
+  return {
+    tool_name: toolName,
+    prompt_chars: prompt ? prompt.length : undefined,
+    payload_keys: Object.keys(payload).slice(0, 40),
+  };
+}
+
+export function buildHookOutboxRecord({
+  sourceClient,
+  event,
+  args,
+  env,
+  payload,
+  now,
+}) {
+  const current = now();
+  return {
+    schema_version: "2026-05-07",
+    source: "orgx_claude_code_plugin_runtime_hook",
+    source_client: sourceClient,
+    event,
+    session_id: pickString(
+      args.session_id,
+      env.CLAUDE_SESSION_ID,
+      payload.session_id,
+      payload.sessionId,
+      payload.conversation_id,
+      payload.conversationId,
+      payload.thread_id,
+      payload.threadId
+    ),
+    turn_id: pickString(args.turn_id, payload.turn_id, payload.turnId),
+    cwd: pickString(
+      args.cwd,
+      env.CLAUDE_PROJECT_DIR,
+      payload.cwd,
+      payload.working_directory,
+      payload.workspace,
+      process.cwd()
+    ),
+    transcript_path: pickString(
+      args.transcript_path,
+      payload.transcript_path,
+      payload.transcriptPath
+    ),
+    timestamp: current instanceof Date
+      ? current.toISOString()
+      : new Date(current).toISOString(),
+    summary: summarizeHookPayload(payload, args),
+  };
+}
+
+export function appendHookOutboxRecord(record, { args = {}, env = process.env } = {}) {
+  const outbox = pickString(
+    env.ORGX_WIZARD_HOOK_OUTBOX,
+    args.outbox,
+    join(homedir(), ".config", "useorgx", "wizard", "hooks", "events.jsonl")
+  );
+  try {
+    mkdirSync(dirname(outbox), { recursive: true, mode: 0o700 });
+    appendFileSync(outbox, `${JSON.stringify(record)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function postJson(url, payload, headers, fetchImpl = fetch) {
@@ -150,6 +247,7 @@ export async function main({
   env = process.env,
   fetchImpl = fetch,
   now = () => Date.now(),
+  readStdinImpl = readStdin,
 } = {}) {
   const args = parseArgs(argv);
 
@@ -186,6 +284,18 @@ export async function main({
   const progressPctRaw = pickString(args.progress_pct, env.ORGX_PROGRESS_PCT);
   const progressPct = progressPctRaw ? Number(progressPctRaw) : undefined;
   const message = pickString(args.message, `Hook event: ${event}`);
+  const hookPayload = parseJson(await readStdinImpl());
+  const hookOutboxWritten = appendHookOutboxRecord(
+    buildHookOutboxRecord({
+      sourceClient,
+      event,
+      args,
+      env,
+      payload: hookPayload,
+      now,
+    }),
+    { args, env }
+  );
 
   let runtimePosted = false;
   let runtimePostFailed = false;
@@ -222,6 +332,7 @@ export async function main({
     return {
       ok: true,
       runtime_posted: runtimePosted,
+      hook_outbox_written: hookOutboxWritten,
       skipped: "missing_api_key",
       ...(runtimePostFailed ? { runtime_skipped: "runtime_post_failed" } : {}),
     };
@@ -230,6 +341,7 @@ export async function main({
     return {
       ok: true,
       runtime_posted: runtimePosted,
+      hook_outbox_written: hookOutboxWritten,
       skipped: "missing_initiative_id",
       ...(runtimePostFailed ? { runtime_skipped: "runtime_post_failed" } : {}),
     };
@@ -256,6 +368,7 @@ export async function main({
     return {
       ok: true,
       runtime_posted: runtimePosted,
+      hook_outbox_written: hookOutboxWritten,
       skipped: "activity_post_failed",
     };
   }
@@ -265,6 +378,7 @@ export async function main({
     return {
       ok: true,
       runtime_posted: runtimePosted,
+      hook_outbox_written: hookOutboxWritten,
       activity_posted: true,
       changeset_posted: false,
     };
@@ -285,6 +399,7 @@ export async function main({
     return {
       ok: true,
       runtime_posted: runtimePosted,
+      hook_outbox_written: hookOutboxWritten,
       activity_posted: true,
       changeset_posted: false,
       skipped: "changeset_post_failed",
@@ -294,6 +409,7 @@ export async function main({
   return {
     ok: true,
     runtime_posted: runtimePosted,
+    hook_outbox_written: hookOutboxWritten,
     activity_posted: true,
     changeset_posted: true,
   };

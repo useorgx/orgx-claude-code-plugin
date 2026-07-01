@@ -2,6 +2,7 @@
 
 Claude Code plugin package for OrgX:
 - OrgX MCP server wiring (`mcp.useorgx.com`)
+- Source-backed memory projection through `orgx_memory_context`
 - Runtime hooks that post activity/progress back to OrgX
 - Browser pairing login (`/orgx-login`) with macOS keychain storage
 - Session env hydration from keychain (`hooks/scripts/load-orgx-env.mjs`)
@@ -29,6 +30,7 @@ Claude Code plugin package for OrgX:
 .claude-plugin/plugin.json   # Claude plugin manifest
 hooks/hooks.json             # Claude hook declarations
 hooks/scripts/post-reporting-event.mjs
+hooks/scripts/orgx-work-graph-reconcile.mjs
 commands/*.md                # Slash commands
 agents/*.md                  # Subagent profiles
 skills/**/SKILL.md           # Reusable guidance
@@ -102,6 +104,35 @@ claude --plugin-dir . --permission-mode bypassPermissions -p "Use the orgx_statu
 - optional local runtime relay -> `ORGX_RUNTIME_HOOK_URL`
 
 The script is best-effort and exits cleanly on failures to avoid interrupting Claude sessions.
+
+## Memory Projection
+
+Treat OrgX as canonical memory. Before relying on durable project or initiative
+context, call `orgx_memory_context` with `client: "claude_code"` and preserve
+the returned `source_refs`, `confidence`, `stale_after`, `sensitivity`, and
+`projection_targets`. Plugin installation and MCP config file presence are not
+proof that the active Claude Code session can call the tool; verify with a
+low-risk direct tool call in that session.
+
+The hook script also writes compact, summary-only records to the shared OrgX
+hook outbox at `~/.config/useorgx/wizard/hooks/events.jsonl`. The local
+reconciler turns that outbox into a Work Graph hydration report with a stable
+`work_graph_fingerprint` and `signup_hydration.hydration_key`:
+
+```bash
+orgx-claude-code-reconcile-hooks \
+  --outbox ~/.config/useorgx/wizard/hooks/events.jsonl \
+  --output /tmp/orgx-work-graph-report.json
+```
+
+Publishing is explicit and uses the same client Work Graph ingest endpoint:
+
+```bash
+ORGX_API_KEY=oxk_... orgx-claude-code-reconcile-hooks --post
+```
+
+Hooks are reconciliation backstops. They must stay summary-only and must not
+persist raw transcripts, tokens, cookies, API keys, or one-time codes.
 
 ## Next Steps
 
