@@ -1,6 +1,6 @@
 {
   "name": "@useorgx/claude-code-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "OrgX Claude Code plugin with MCP, operator chronicle reporting, runtime telemetry hooks, Work Graph reconciliation, and Sovereign Execution peer sidecar",
   "type": "module",
   "private": true,
@@ -42,7 +42,7 @@
     "peer:start": "node lib/peer/cli.mjs"
   },
   "dependencies": {
-    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk#697b5a853b8254f0f9239bf73ab13de230651c24",
+    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk#bff98c55f523c7c9f08be52257f4199ac85650f9",
     "ws": "^8.18.3"
   },
   "devDependencies": {
