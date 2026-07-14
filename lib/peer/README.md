@@ -2,7 +2,12 @@
 
 The plugin under `@useorgx/claude-code-plugin` has always been a **Claude Code CLI plugin** (hooks + skills + commands + agents) you load with `claude --plugin-dir .`.
 
-This folder adds a second shape: a **peer sidecar** that connects to OrgX server over WebSocket and dispatches to your local `claude` CLI on demand. That sidecar implements [Gateway Protocol v1](https://github.com/useorgx/orgx-gateway-sdk/blob/main/PROTOCOL.md) via the shared `@useorgx/orgx-gateway-sdk` package.
+This folder adds a second shape: a **peer sidecar** that connects to OrgX server over WebSocket and dispatches to your local `claude` CLI on demand. The sidecar uses the shared `@useorgx/orgx-gateway-sdk` package, pinned to a release that supports Gateway protocols v1 and v2.
+
+The production peer deliberately negotiates v1 today: a successful Claude
+process is not, by itself, a canonical `ProofPacket`. The protocol will move to
+v2 only when the driver can return the envelope-bound proof, receipt, artifact,
+cost, and outcome references required by `ExecutionResult`.
 
 ## Mental model
 
