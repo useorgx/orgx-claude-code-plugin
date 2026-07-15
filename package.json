@@ -3,7 +3,10 @@
   "version": "0.1.5",
   "description": "OrgX Claude Code plugin with MCP, operator chronicle reporting, runtime telemetry hooks, Work Graph reconciliation, and Sovereign Execution peer sidecar",
   "type": "module",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,6 +26,7 @@
     "lib/",
     "scripts/",
     "skills/",
+    "plugin.manifest.json",
     "README.md",
     "tsconfig.json"
   ],
@@ -36,6 +40,7 @@
     "test:peer": "node --test lib/peer/peer.test.mjs",
     "verify": "node scripts/verify-plugin.mjs",
     "check": "npm run typecheck && npm run test && npm run verify",
+    "prepublishOnly": "npm run check",
     "pack": "mkdir -p artifacts && npm pack --pack-destination artifacts",
     "release:dry-run": "node scripts/release-dry-run.mjs",
     "dev:claude": "claude --plugin-dir .",
