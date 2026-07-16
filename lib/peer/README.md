@@ -2,12 +2,13 @@
 
 The plugin under `@useorgx/claude-code-plugin` has always been a **Claude Code CLI plugin** (hooks + skills + commands + agents) you load with `claude --plugin-dir .`.
 
-This folder adds a second shape: a **peer sidecar** that connects to OrgX server over WebSocket and dispatches to your local `claude` CLI on demand. The sidecar uses the shared `@useorgx/orgx-gateway-sdk` package, pinned to a release that supports Gateway protocols v1 and v2.
+This folder adds a second shape: a **peer sidecar** that connects to OrgX server over WebSocket and dispatches to your local `claude` CLI on demand. The sidecar uses the shared `@useorgx/orgx-gateway-sdk` package, pinned to a release that supports Gateway protocols v1, v2, and v3.
 
-The production peer deliberately negotiates v1 today: a successful Claude
-process is not, by itself, a canonical `ProofPacket`. The protocol will move to
-v2 only when the driver can return the envelope-bound proof, receipt, artifact,
-cost, and outcome references required by `ExecutionResult`.
+The production peer negotiates v3 for resumable human attention while retaining
+the v1 task terminal. A successful Claude process is not, by itself, a
+canonical `ProofPacket`; proof finalization will move to v2 only when the driver
+can return the envelope-bound proof, receipt, artifact, cost, and outcome
+references required by `ExecutionResult`.
 
 ## Mental model
 
@@ -50,6 +51,26 @@ await peer.stop();
 - `claude` is invoked with `--output-format stream-json` so stdout is NDJSON events that the Driver translates into wire-protocol messages.
 - Token usage is accumulated from `tokens_used` events emitted by Claude Code when present; `cost_estimate_cents` is set to 0 because subscription-backed dispatches don't carry a price — the server fills `saved_estimate_cents` later via the receipt aggregator.
 
+## AskUserQuestion continuation
+
+For sidecar-dispatched work, the `PreToolUse:AskUserQuestion` hook posts each
+question to the initiative's OrgX Attention queue and returns Claude's native
+`defer` decision. Claude preserves the session and tool call instead of turning
+the interruption into a failed run.
+
+When every related answer arrives, Gateway v3 sends `attention.resolve` to the
+owning peer. The driver stores the answer in the local 0600 checkpoint, resumes
+the same Claude session with `--resume`, and the hook allows the preserved tool
+with structured `updatedInput.answers`. OrgX receives separate
+`answer_received`, `resuming`, and `resumed` receipts, followed by the continued
+task's normal terminal receipt.
+
+The hook fails open to Claude's native interaction if OrgX, auth, or lineage is
+unavailable; it never traps the session behind a network-only state. Native
+`PermissionRequest` does not expose the same durable defer/resume contract, so
+this release does not claim remote permission parity. Explicit human choices
+must use `AskUserQuestion`; local permission policy remains authoritative.
+
 ## Peer lifecycle
 
 ```
@@ -67,7 +88,8 @@ startPeer()
 
 ## Files
 
-- `ClaudeCodeDriver.mjs` — Driver implementing Gateway Protocol v1. Spawns `claude`, reads NDJSON stdout, emits task.step / task.deviation / task.completed / task.failed.
+- `ClaudeCodeDriver.mjs` — Driver implementing v1 task execution plus v3 resumable attention. Spawns `claude`, reads NDJSON stdout, and preserves deferred sessions.
+- `attentionState.mjs` — private local checkpoint store for decision/session/tool-call bindings and structured answers.
 - `peer.mjs` — `startPeer()` wires Driver into PeerClient + manages heartbeat.
 - `cli.mjs` — shell entrypoint so `node lib/peer/cli.mjs` just works.
 - `peer.test.mjs` — Node `node --test` unit coverage for the Driver (spawns a fake `claude` via a test fixture).
