@@ -34,15 +34,15 @@ export function envFlag(value) {
 }
 
 export function shouldPost(args = {}, env = {}) {
-  return envFlag(
-    pickString(
-      args.post,
-      args["post-report"],
-      env.ORGX_CLAUDE_HOOK_RECONCILE_POST,
-      env.ORGX_HOOK_RECONCILE_POST,
-      env.ORGX_WIZARD_HOOK_RECONCILE_POST
-    )
+  const explicit = pickString(
+    args.post,
+    args["post-report"],
+    env.ORGX_CLAUDE_HOOK_RECONCILE_POST,
+    env.ORGX_HOOK_RECONCILE_POST,
+    env.ORGX_WIZARD_HOOK_RECONCILE_POST
   );
+  if (explicit) return envFlag(explicit);
+  return Boolean(pickString(args.api_key, args["api-key"], env.ORGX_API_KEY));
 }
 
 function withoutPostFlags(argv) {

@@ -13,7 +13,6 @@ import {
   buildWorkGraphHookRecord,
   buildRuntimePayload,
   buildActivityPayload,
-  buildCompletionChangesetPayload,
   main,
 } from "../hooks/scripts/post-reporting-event.mjs";
 
@@ -85,15 +84,6 @@ test("payload builders shape expected OrgX fields", () => {
   });
   assert.equal(activity.level, "warn");
 
-  const changeset = buildCompletionChangesetPayload({
-    initiativeId: "init-1",
-    runId: "run-1",
-    correlationId: "corr-1",
-    sourceClient: "claude-code",
-    event: "stop",
-    taskId: "task-1",
-  });
-  assert.equal(changeset.operations[0].status, "done");
 });
 
 test("main skips when api key is missing", async () => {
@@ -108,7 +98,7 @@ test("main skips when api key is missing", async () => {
   assert.equal(result.skipped, "missing_api_key");
 });
 
-test("main posts activity and completion changeset", async () => {
+test("passive Stop hook posts activity but cannot complete a scoped task", async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {
     calls.push({ url, init });
@@ -144,11 +134,11 @@ test("main posts activity and completion changeset", async () => {
 
   assert.equal(result.ok, true);
   assert.equal(result.activity_posted, true);
-  assert.equal(result.changeset_posted, true);
+  assert.equal(result.changeset_posted, false);
+  assert.equal(result.completion_ignored, "passive_hook_cannot_complete_task");
 
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://www.useorgx.com/api/client/live/activity");
-  assert.equal(calls[1].url, "https://www.useorgx.com/api/client/live/changesets/apply");
   assert.equal(calls[0].init.headers.Authorization, "Bearer oxk_test");
 });
 
@@ -248,6 +238,14 @@ test("configured Stop hooks record and reconcile Claude Work Graph evidence", ()
   assert.equal(
     stopCommands.some((command) => command.includes("post-reporting-event.mjs")),
     true
+  );
+  assert.equal(
+    stopCommands.some(
+      (command) =>
+        command.includes("--apply_completion") ||
+        command.includes("--phase=completed")
+    ),
+    false
   );
   assert.equal(
     stopCommands.some(
