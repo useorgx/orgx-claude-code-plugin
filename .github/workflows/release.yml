@@ -7,19 +7,24 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install trusted publishing npm
+        run: npm install --global npm@11.18.0
 
       - name: Install
         run: npm ci
@@ -29,6 +34,9 @@ jobs:
 
       - name: Pack
         run: npm run pack
+
+      - name: Publish to npm
+        run: npm publish artifacts/*.tgz --access public
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
