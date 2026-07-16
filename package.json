@@ -1,6 +1,6 @@
 {
   "name": "@useorgx/claude-code-plugin",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "OrgX Claude Code plugin with MCP, operator chronicle reporting, runtime telemetry hooks, Work Graph reconciliation, and Sovereign Execution peer sidecar",
   "type": "module",
   "private": false,
