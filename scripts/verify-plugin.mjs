@@ -128,6 +128,15 @@ if (!stopHookCommands.some((command) => command.includes("post-reporting-event.m
   fail("Stop hook must record a compact runtime event");
 }
 if (
+  stopHookCommands.some(
+    (command) =>
+      command.includes("--apply_completion") ||
+      command.includes("--phase=completed")
+  )
+) {
+  fail("Stop hooks are passive and must never complete scoped work");
+}
+if (
   !stopHookCommands.some(
     (command) =>
       command.includes("orgx-reconcile-hook.mjs") &&

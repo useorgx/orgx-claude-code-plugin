@@ -155,30 +155,6 @@ export function buildActivityPayload({
   };
 }
 
-export function buildCompletionChangesetPayload({
-  initiativeId,
-  runId,
-  correlationId,
-  sourceClient,
-  event,
-  taskId,
-}) {
-  return {
-    initiative_id: initiativeId,
-    run_id: runId,
-    correlation_id: correlationId,
-    source_client: sourceClient,
-    idempotency_key: `hook:${event}:${taskId}`,
-    operations: [
-      {
-        op: "task.update",
-        task_id: taskId,
-        status: "done",
-      },
-    ],
-  };
-}
-
 export function buildWorkGraphHookRecord({
   args,
   payload,
@@ -384,45 +360,15 @@ export async function main({
     };
   }
 
-  const shouldApplyCompletion = args.apply_completion === "true" || args.apply_completion === "1";
-  if (!shouldApplyCompletion || !taskId) {
-    return {
-      ok: true,
-      runtime_posted: runtimePosted,
-      work_graph_spooled: workGraphSpooled,
-      activity_posted: true,
-      changeset_posted: false,
-    };
-  }
-
-  const changesetPayload = buildCompletionChangesetPayload({
-    initiativeId,
-    runId,
-    correlationId,
-    sourceClient,
-    event,
-    taskId,
-  });
-
-  try {
-    await postJson(`${baseUrl}/api/client/live/changesets/apply`, changesetPayload, headers, fetchImpl);
-  } catch {
-    return {
-      ok: true,
-      runtime_posted: runtimePosted,
-      work_graph_spooled: workGraphSpooled,
-      activity_posted: true,
-      changeset_posted: false,
-      skipped: "changeset_post_failed",
-    };
-  }
-
   return {
     ok: true,
     runtime_posted: runtimePosted,
     work_graph_spooled: workGraphSpooled,
     activity_posted: true,
-    changeset_posted: true,
+    changeset_posted: false,
+    ...(args.apply_completion === "true" || args.apply_completion === "1"
+      ? { completion_ignored: "passive_hook_cannot_complete_task" }
+      : {}),
   };
 }
 

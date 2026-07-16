@@ -1,6 +1,6 @@
 {
   "name": "orgx-claude-code-plugin",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "OrgX MCP tools, operator chronicle reporting, runtime telemetry hooks, and Work Graph reconciliation for Claude Code.",
   "author": {
     "name": "OrgX Team",

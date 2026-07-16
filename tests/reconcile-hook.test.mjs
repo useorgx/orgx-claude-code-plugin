@@ -30,15 +30,15 @@ function hookRecord(overrides = {}) {
   };
 }
 
-test("Claude reconcile hook builds a local report path and does not post by default", () => {
+test("Claude reconcile hook replays authenticated outbox records by default", () => {
   const built = buildReconcileArgv(["--event=stop"], {
     ORGX_WIZARD_HOOK_OUTBOX: "/tmp/events.jsonl",
     ORGX_API_KEY: "oxk_test",
   });
 
-  assert.equal(built.postRequested, false);
-  assert.equal(built.postEnabled, false);
-  assert.equal(built.argv.includes("--post=true"), false);
+  assert.equal(built.postRequested, true);
+  assert.equal(built.postEnabled, true);
+  assert.equal(built.argv.includes("--post=true"), true);
   assert.equal(built.argv.some((arg) => arg === "--outbox=/tmp/events.jsonl"), true);
   assert.equal(
     built.argv.some((arg) => arg.includes("latest-work-graph-report.json")),
@@ -46,8 +46,9 @@ test("Claude reconcile hook builds a local report path and does not post by defa
   );
 });
 
-test("Claude reconcile hook posting requires opt-in and an API key", () => {
+test("Claude reconcile hook posting requires an API key and supports explicit disable", () => {
   assert.equal(shouldPost({}, {}), false);
+  assert.equal(shouldPost({}, { ORGX_API_KEY: "oxk_test" }), true);
   assert.equal(shouldPost({}, { ORGX_CLAUDE_HOOK_RECONCILE_POST: "true" }), true);
   assert.equal(shouldPost({}, { ORGX_HOOK_RECONCILE_POST: "1" }), true);
   assert.equal(shouldPost({}, { ORGX_WIZARD_HOOK_RECONCILE_POST: "yes" }), true);
@@ -67,6 +68,39 @@ test("Claude reconcile hook posting requires opt-in and an API key", () => {
   assert.equal(enabled.postRequested, true);
   assert.equal(enabled.postEnabled, true);
   assert.equal(enabled.argv.includes("--post=true"), true);
+
+  const disabled = buildReconcileArgv(["--event=stop", "--post=false"], {
+    ORGX_API_KEY: "oxk_test",
+  });
+  assert.equal(disabled.postRequested, false);
+  assert.equal(disabled.postEnabled, false);
+  assert.equal(disabled.argv.includes("--post=true"), false);
+});
+
+test("Claude authenticated Stop replay stays private", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "orgx-claude-private-replay-"));
+  const outbox = join(dir, "events.jsonl");
+  const output = join(dir, "report.json");
+  writeFileSync(outbox, `${JSON.stringify(hookRecord())}\n`, "utf8");
+  const calls = [];
+
+  const result = await main({
+    argv: ["--event=stop", `--outbox=${outbox}`, `--output=${output}`],
+    env: { ORGX_API_KEY: "oxk_test", ORGX_BASE_URL: "https://example.test" },
+    now: () => new Date(NOW),
+    fetchImpl: async (url, options) => {
+      calls.push({ url, options });
+      return {
+        ok: true,
+        json: async () => ({ ok: true, replayed: false }),
+      };
+    },
+  });
+
+  assert.equal(result.posted_enabled, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://example.test/api/client/work-graph/reports");
+  assert.equal(JSON.parse(calls[0].options.body).public_share, false);
 });
 
 test("Claude reconcile hook writes summary-only report for Stop", async () => {
