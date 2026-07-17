@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@sentry/node": "10.65.0",
-    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk#c2eb30d4f2df6b19edd3894ad06adb8b3e1ddbdb",
+    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk#37ca6ddedee954fd7192640472ce5dc087f90fed",
     "ws": "^8.18.3"
   },
   "devDependencies": {
