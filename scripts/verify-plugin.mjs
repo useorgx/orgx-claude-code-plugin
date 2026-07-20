@@ -73,6 +73,12 @@ if (orgxServer.type !== "http") fail("mcpServers.orgx.type must be 'http'");
 if (typeof orgxServer.url !== "string" || orgxServer.url.trim().length === 0) {
   fail("mcpServers.orgx.url must be a non-empty string");
 }
+if (
+  orgxServer.url !==
+  "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp?profile=commander}"
+) {
+  fail("mcpServers.orgx.url must default to the commander MCP profile");
+}
 
 let marketplace;
 try {
