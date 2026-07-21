@@ -23,7 +23,7 @@ test("orgx-login writes local config without API key", () => {
   const config = {
     enabled: true,
     baseUrl: "https://www.useorgx.com",
-    mcpUrl: "https://mcp.useorgx.com/mcp",
+    mcpUrl: "https://mcp.useorgx.com/mcp?profile=commander",
     initiativeId: "init-1",
     userId: "user-1",
     workspaceName: "workspace",

@@ -9,7 +9,7 @@
   "mcpServers": {
     "orgx": {
       "type": "http",
-      "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp}",
+      "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp?profile=commander}",
       "headers": {
         "Authorization": "Bearer ${ORGX_API_KEY:-}",
         "X-Orgx-User-Id": "${ORGX_USER_ID:-}"

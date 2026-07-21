@@ -15,7 +15,7 @@ import {
 } from "../lib/agent-profile-sync.mjs";
 
 const DEFAULT_BASE_URL = "https://www.useorgx.com";
-const DEFAULT_MCP_URL = "https://mcp.useorgx.com/mcp";
+const DEFAULT_MCP_URL = "https://mcp.useorgx.com/mcp?profile=commander";
 const DEFAULT_PAIR_TIMEOUT_MS = 8 * 60 * 1000;
 const KEYCHAIN_SERVICE = "orgx-claude-code-plugin";
 const LOCAL_CONFIG_FILENAME = "orgx.local.json";

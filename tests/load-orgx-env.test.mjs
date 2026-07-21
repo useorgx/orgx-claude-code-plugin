@@ -23,7 +23,7 @@ test("buildEnvLines emits exports for configured values", () => {
     baseUrl: "https://www.useorgx.com",
     initiativeId: "init-1",
     userId: "user-1",
-    mcpUrl: "https://mcp.useorgx.com/mcp",
+    mcpUrl: "https://mcp.useorgx.com/mcp?profile=commander",
   });
   assert.equal(lines.length, 5);
   assert.ok(lines[0].startsWith("export ORGX_API_KEY="));

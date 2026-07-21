@@ -42,7 +42,7 @@ skills/**/SKILL.md           # Reusable guidance
 ## Environment Variables
 
 - `ORGX_API_KEY` (required for live activity/changesets)
-- `ORGX_MCP_URL` (optional, default: `https://mcp.useorgx.com/mcp`)
+- `ORGX_MCP_URL` (optional, default: `https://mcp.useorgx.com/mcp?profile=commander`)
 - `ORGX_BASE_URL` (optional, default: `https://www.useorgx.com`)
 - `ORGX_INITIATIVE_ID` (recommended for activity attribution)
 - `ORGX_USER_ID` (optional header for API attribution)
@@ -120,7 +120,7 @@ Install the plugin:
 
 Run `/orgx-login` after installation to pair a workspace and store the OrgX API
 key in the local keychain. The hosted MCP endpoint defaults to
-`https://mcp.useorgx.com/mcp`.
+`https://mcp.useorgx.com/mcp?profile=commander`.
 
 ## Hook Behavior
 
