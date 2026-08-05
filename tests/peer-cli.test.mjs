@@ -28,6 +28,7 @@ describe('orgx-claude-code-peer CLI', () => {
     assert.equal(received.runnerInstanceId, 'candidate.activation-01');
     assert.equal(received.activationAttemptId, 'activation-01');
     assert.equal(received.runnerRole, 'candidate');
+    assert.equal(received.apiKey, 'oxk_test_only');
   });
 
   it('rejects a partial activation binding before starting the peer', async () => {
@@ -79,5 +80,27 @@ describe('orgx-claude-code-peer CLI', () => {
     assert.equal(identityInput.workspaceId, 'workspace-interactive');
     assert.equal(identityInput.installationId, 'installation-interactive');
     assert.equal(received.runnerInstanceId, 'persisted-claude-runner');
+    assert.equal(received.apiKey, 'oxk_test_only');
+  });
+
+  it('removes Gateway transport authority from the ambient peer environment', async () => {
+    const env = {
+      ORGX_API_KEY: 'oxk_test_only',
+      ORGX_GATEWAY_KEY: 'oxk_legacy_test_only',
+      ORGX_WORKSPACE_ID: 'workspace-isolated',
+    };
+
+    const code = await main({
+      env,
+      log: () => undefined,
+      resolveRunnerInstanceIdImpl: async () => 'runner-isolated',
+      startPeerImpl: async () => ({ stop: async () => undefined }),
+      registerSignalHandlers: false,
+    });
+
+    assert.equal(code, 0);
+    assert.equal(env.ORGX_API_KEY, undefined);
+    assert.equal(env.ORGX_GATEWAY_KEY, undefined);
+    assert.equal(env.ORGX_WORKSPACE_ID, 'workspace-isolated');
   });
 });
