@@ -66,7 +66,16 @@ Official policy and submission documentation:
 6. Open `/mcp`, select `orgx`, and complete native OAuth.
 7. Confirm the endpoint is
    `https://mcp.useorgx.com/mcp?profile=claude-directory` and the server is
-   connected.
+   connected. Confirm it advertises exactly these seven read tools:
+
+   - `orgx_search`
+   - `orgx_inspect`
+   - `orgx_recommend`
+   - `get_agent_status`
+   - `get_initiative_pulse`
+   - `get_morning_brief`
+   - `get_operator_chronicle`
+
 8. Use the provider's secure reviewer-credential field for the populated test
    account. Never put reviewer credentials in this repository, a PR, an issue,
    or a screenshot.
@@ -93,7 +102,7 @@ Official policy and submission documentation:
 - [ ] clean remote HTTPS marketplace install passed with SSH disabled
 - [ ] released OrgX wizard copied `.mcp.json` and pruned legacy runtime files
 - [ ] native OAuth completed with the reviewer account
-- [ ] all advertised MCP tools exercised with seeded data
+- [ ] all seven advertised MCP tools exercised with seeded data
 - [ ] privacy, terms, support, repository, and MCP URLs respond publicly
 
 ## Official submission portals

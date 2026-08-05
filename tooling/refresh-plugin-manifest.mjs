@@ -11,6 +11,7 @@ export function fingerprintPayload(manifest) {
     plugin_name: manifest.plugin_name,
     version: manifest.version,
     capabilities: [...(manifest.capabilities ?? [])].sort(),
+    mcp_tools: [...(manifest.mcp_tools ?? [])].sort(),
     driver_ids: [...(manifest.driver_ids ?? [])].sort(),
   };
 }

@@ -1,6 +1,6 @@
 ---
 description: Read the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
-allowed-tools: mcp__orgx__get_operator_chronicle
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_operator_chronicle
 ---
 
 Call `get_operator_chronicle` with `period: "30d"` after the user invokes this

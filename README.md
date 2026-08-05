@@ -50,9 +50,8 @@ The plugin connects to:
 https://mcp.useorgx.com/mcp?profile=claude-directory
 ```
 
-That profile advertises the directory-safe read surface:
+That profile advertises exactly seven directory-safe read tools:
 
-- `orgx_bootstrap`
 - `orgx_search`
 - `orgx_inspect`
 - `orgx_recommend`

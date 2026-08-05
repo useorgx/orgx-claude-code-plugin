@@ -88,6 +88,42 @@ test("loaded instructions contain no automatic, dynamic, or session-data path", 
   }
 });
 
+test("commands use Claude plugin-scoped bundled MCP tool names", () => {
+  const pluginManifest = JSON.parse(
+    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
+  );
+  const mcpConfig = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
+  const serverKeys = Object.keys(mcpConfig.mcpServers ?? {});
+  assert.deepEqual(serverKeys, ["orgx"]);
+
+  const toolPrefix = `mcp__plugin_${pluginManifest.name}_${serverKeys[0]}__`;
+  for (const [commandFile, toolName] of [
+    ["orgx-status.md", "get_initiative_pulse"],
+    ["orgx-operator-chronicle.md", "get_operator_chronicle"],
+  ]) {
+    const text = readFileSync(resolve(root, "commands", commandFile), "utf8");
+    assert.match(
+      text,
+      new RegExp(`^allowed-tools: ${toolPrefix}${toolName}$`, "mu"),
+      commandFile
+    );
+  }
+});
+
+test("public catalog contains exactly seven read tools", () => {
+  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
+  assert.deepEqual([...manifest.mcp_tools].sort(), [
+    "get_agent_status",
+    "get_initiative_pulse",
+    "get_morning_brief",
+    "get_operator_chronicle",
+    "orgx_inspect",
+    "orgx_recommend",
+    "orgx_search",
+  ]);
+  assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
+});
+
 test("submission runbook uses Anthropic's current plugin portals", () => {
   const path = resolve(root, "docs", "anthropic-plugin-directory-submission.md");
   const text = readFileSync(path, "utf8");

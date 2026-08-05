@@ -1,14 +1,23 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
   "version": "0.1.12",
-  "manifest_fingerprint": "sha256:f602d5de21359114bff7862b7d54901e2c05a304ce450ab54bc84e8844df1d82",
+  "manifest_fingerprint": "sha256:2fb087d3a45bd2c79c6507930c92cf5dff328e1f7007b24deb9602aa28854337",
   "capabilities": [
     "commands:user-invoked",
     "mcp:remote-oauth",
     "skills:static"
   ],
+  "mcp_tools": [
+    "get_agent_status",
+    "get_initiative_pulse",
+    "get_morning_brief",
+    "get_operator_chronicle",
+    "orgx_inspect",
+    "orgx_recommend",
+    "orgx_search"
+  ],
   "driver_ids": [
     "claude_code"
   ],
-  "notes": "The public plugin loads only static guidance, user-invoked commands, and the read-only OrgX MCP profile. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
+  "notes": "The public plugin loads only static guidance, user-invoked commands, and the seven-tool read-only OrgX MCP profile. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
 }

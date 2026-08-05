@@ -94,6 +94,7 @@ if (Object.hasOwn(manifest, "mcpServers")) {
 }
 const orgxServer = mcp.mcpServers?.orgx;
 if (!orgxServer || orgxServer.type !== "http") fail("missing HTTP orgx MCP server");
+assertSameMembers(Object.keys(mcp.mcpServers ?? {}), ["orgx"], "MCP server keys");
 const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=claude-directory";
 if (orgxServer.url !== expectedMcpUrl) {
   fail(`orgx MCP URL must be ${expectedMcpUrl}`);
@@ -183,6 +184,22 @@ assertSameMembers(
   ["orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"],
   "loaded commands"
 );
+
+const serverKey = Object.keys(mcp.mcpServers)[0];
+const scopedToolPrefix = `mcp__plugin_${manifest.name}_${serverKey}__`;
+const commandToolContracts = new Map([
+  ["orgx-status.md", "get_initiative_pulse"],
+  ["orgx-operator-chronicle.md", "get_operator_chronicle"],
+]);
+for (const [commandFile, toolName] of commandToolContracts) {
+  const commandText = readFileSync(resolve(root, "commands", commandFile), "utf8");
+  const allowedTools = commandText.match(/^allowed-tools:\s*(\S+)\s*$/mu)?.[1];
+  const expectedTool = `${scopedToolPrefix}${toolName}`;
+  if (allowedTools !== expectedTool) {
+    fail(`${commandFile} allowed-tools must be ${expectedTool}, received ${String(allowedTools)}`);
+  }
+}
+
 const skillFiles = listFiles(resolve(root, "skills")).filter(
   (path) => extname(path) === ".md"
 );
@@ -200,6 +217,41 @@ assertSameMembers(
   ["commands:user-invoked", "mcp:remote-oauth", "skills:static"],
   "release capabilities"
 );
+const expectedDirectoryTools = [
+  "get_agent_status",
+  "get_initiative_pulse",
+  "get_morning_brief",
+  "get_operator_chronicle",
+  "orgx_inspect",
+  "orgx_recommend",
+  "orgx_search",
+];
+assertSameMembers(
+  releaseManifest.mcp_tools ?? [],
+  expectedDirectoryTools,
+  "directory MCP tool catalog"
+);
+if (releaseManifest.mcp_tools.includes("orgx_bootstrap")) {
+  fail("directory MCP tool catalog must not include stateful orgx_bootstrap");
+}
+for (const toolName of commandToolContracts.values()) {
+  if (!releaseManifest.mcp_tools.includes(toolName)) {
+    fail(`command tool is missing from directory MCP tool catalog: ${toolName}`);
+  }
+}
+
+const readme = readFileSync(resolve(root, "README.md"), "utf8");
+if (!readme.includes("exactly seven directory-safe read tools")) {
+  fail("README must describe the exact seven-tool directory profile");
+}
+for (const toolName of expectedDirectoryTools) {
+  if (!readme.includes(`- \`${toolName}\``)) {
+    fail(`README is missing directory tool ${toolName}`);
+  }
+}
+if (readme.includes("- `orgx_bootstrap`")) {
+  fail("README must not advertise stateful orgx_bootstrap");
+}
 const expectedFingerprint = expectedManifestFingerprint(releaseManifest);
 if (releaseManifest.manifest_fingerprint !== expectedFingerprint) {
   fail(`release manifest fingerprint mismatch; expected ${expectedFingerprint}`);

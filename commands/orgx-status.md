@@ -1,6 +1,6 @@
 ---
 description: Read an OrgX initiative pulse after the user requests a status snapshot.
-allowed-tools: mcp__orgx__get_initiative_pulse
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_initiative_pulse
 ---
 
 Call `get_initiative_pulse` once after the user invokes this command and summarize:
