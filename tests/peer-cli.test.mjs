@@ -31,6 +31,29 @@ describe('orgx-claude-code-peer CLI', () => {
     assert.equal(received.apiKey, 'oxk_test_only');
   });
 
+  it('keeps the executable peer alive until shutdown is requested', async () => {
+    const peer = { stop: async () => undefined };
+    let waitedFor;
+    const code = await main({
+      env: {
+        ORGX_API_KEY: 'oxk_test_only',
+        ORGX_WORKSPACE_ID: 'workspace-candidate',
+        ORGX_INSTALLATION_ID: 'installation-candidate',
+        ORGX_RUNNER_INSTANCE_ID: 'candidate.activation-keepalive',
+        ORGX_ACTIVATION_ATTEMPT_ID: 'activation-keepalive',
+        ORGX_RUNNER_ROLE: 'candidate',
+      },
+      log: () => undefined,
+      startPeerImpl: async () => peer,
+      waitForShutdownImpl: async (startedPeer) => {
+        waitedFor = startedPeer;
+      },
+    });
+
+    assert.equal(code, 0);
+    assert.equal(waitedFor, peer);
+  });
+
   it('rejects a partial activation binding before starting the peer', async () => {
     const errors = [];
     let started = false;
