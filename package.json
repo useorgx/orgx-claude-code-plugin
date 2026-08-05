@@ -1,6 +1,6 @@
 {
   "name": "@useorgx/claude-code-plugin",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "OrgX Claude Code plugin with MCP, operator chronicle reporting, runtime telemetry hooks, Work Graph reconciliation, and Sovereign Execution peer sidecar",
   "type": "module",
   "private": false,
@@ -18,6 +18,7 @@
   },
   "files": [
     ".claude-plugin/",
+    ".mcp.json",
     ".github/",
     "agents/",
     "commands/",
@@ -38,6 +39,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs lib/peer/*.test.mjs",
     "test:peer": "node --test lib/peer/peer.test.mjs",
+    "manifest:refresh": "node scripts/refresh-plugin-manifest.mjs --write",
+    "manifest:check": "node scripts/refresh-plugin-manifest.mjs --check",
     "verify": "node scripts/verify-plugin.mjs",
     "check": "npm run typecheck && npm run test && npm run verify",
     "prepublishOnly": "npm run check",
@@ -48,7 +51,7 @@
   },
   "dependencies": {
     "@sentry/node": "10.65.0",
-    "@useorgx/orgx-gateway-sdk": "github:useorgx/orgx-gateway-sdk#c3dfd41ad01d44660457961f3ddee080e1596faa",
+    "@useorgx/orgx-gateway-sdk": "https://codeload.github.com/useorgx/orgx-gateway-sdk/tar.gz/c3dfd41ad01d44660457961f3ddee080e1596faa",
     "ws": "^8.18.3"
   },
   "devDependencies": {

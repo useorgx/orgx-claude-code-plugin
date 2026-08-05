@@ -4,7 +4,12 @@ import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { parseArgs, writeLocalConfig, readLocalConfig } from "../scripts/orgx-login.mjs";
+import {
+  parseArgs,
+  readLocalConfig,
+  readPluginVersion,
+  writeLocalConfig,
+} from "../scripts/orgx-login.mjs";
 
 test("orgx-login parseArgs parses key/value and boolean flags", () => {
   const parsed = parseArgs([
@@ -15,6 +20,10 @@ test("orgx-login parseArgs parses key/value and boolean flags", () => {
   assert.equal(parsed.initiative_id, "init-1");
   assert.equal(parsed.project_dir, "/tmp/x");
   assert.equal(parsed.open_browser, "false");
+});
+
+test("orgx-login reads the distributed plugin version", () => {
+  assert.equal(readPluginVersion(), "0.1.12");
 });
 
 test("orgx-login writes local config without API key", () => {

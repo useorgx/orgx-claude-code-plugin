@@ -2,6 +2,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { expectedManifestFingerprint } from "./refresh-plugin-manifest.mjs";
 
 function fail(message) {
   console.error(`verify-plugin: ${message}`);
@@ -10,23 +11,35 @@ function fail(message) {
 
 const root = process.cwd();
 const packagePath = resolve(root, "package.json");
+const packageLockPath = resolve(root, "package-lock.json");
 const manifestPath = resolve(root, ".claude-plugin", "plugin.json");
+const mcpConfigPath = resolve(root, ".mcp.json");
 const marketplacePath = resolve(root, ".claude-plugin", "marketplace.json");
+const releaseManifestPath = resolve(root, "plugin.manifest.json");
 const hooksPath = resolve(root, "hooks", "hooks.json");
 const hookScriptPath = resolve(root, "hooks", "scripts", "post-reporting-event.mjs");
 const hookReconcilerPath = resolve(root, "hooks", "scripts", "orgx-work-graph-reconcile.mjs");
 const hookReconcileWrapperPath = resolve(root, "hooks", "scripts", "orgx-reconcile-hook.mjs");
 const operatorChronicleCommandPath = resolve(root, "commands", "orgx-operator-chronicle.md");
+const directorySubmissionPath = resolve(
+  root,
+  "docs",
+  "anthropic-plugin-directory-submission.md"
+);
 
 for (const path of [
   packagePath,
+  packageLockPath,
   manifestPath,
+  mcpConfigPath,
   marketplacePath,
+  releaseManifestPath,
   hooksPath,
   hookScriptPath,
   hookReconcilerPath,
   hookReconcileWrapperPath,
   operatorChronicleCommandPath,
+  directorySubmissionPath,
 ]) {
   if (!existsSync(path)) fail(`missing file: ${path}`);
 }
@@ -53,22 +66,53 @@ for (const key of ["name", "version", "description"]) {
 if (pkg.version !== manifest.version) {
   fail("package.json version must match .claude-plugin/plugin.json version");
 }
+if (manifest.displayName !== "OrgX") fail("manifest displayName must be OrgX");
+if (manifest.homepage !== "https://useorgx.com") {
+  fail("manifest homepage must point to the public OrgX site");
+}
+if (manifest.repository !== "https://github.com/useorgx/orgx-claude-code-plugin") {
+  fail("manifest repository must point to the public plugin repository");
+}
+if (manifest.license !== "MIT") fail("manifest license must be MIT");
+if (!Array.isArray(manifest.keywords) || !manifest.keywords.includes("mcp")) {
+  fail("manifest keywords must include mcp");
+}
 if (!pkg.description.includes("operator chronicle reporting")) {
   fail("package description must mention operator chronicle reporting");
+}
+if (
+  pkg.dependencies?.["@useorgx/orgx-gateway-sdk"] !==
+  "https://codeload.github.com/useorgx/orgx-gateway-sdk/tar.gz/c3dfd41ad01d44660457961f3ddee080e1596faa"
+) {
+  fail("gateway SDK must stay commit-pinned as an HTTPS tarball");
+}
+const packageLockText = readFileSync(packageLockPath, "utf8");
+if (
+  packageLockText.includes("git+ssh://") ||
+  packageLockText.includes("git@github.com") ||
+  packageLockText.includes('"resolved": "git+')
+) {
+  fail("package lock must not require git or GitHub SSH credentials");
 }
 if (!manifest.description.includes("operator chronicle reporting")) {
   fail("manifest description must mention operator chronicle reporting");
 }
 
-if (!manifest.mcpServers || typeof manifest.mcpServers !== "object") {
-  fail("manifest missing mcpServers");
+if (Object.hasOwn(manifest, "mcpServers")) {
+  fail("use the standard root .mcp.json instead of duplicating MCP config inline");
 }
 
-if (!manifest.mcpServers.orgx || typeof manifest.mcpServers.orgx !== "object") {
-  fail("manifest missing mcpServers.orgx");
+let mcpConfig;
+try {
+  mcpConfig = JSON.parse(readFileSync(mcpConfigPath, "utf8"));
+} catch (error) {
+  fail(`invalid JSON in ${mcpConfigPath}: ${String(error)}`);
+}
+if (!mcpConfig.mcpServers?.orgx || typeof mcpConfig.mcpServers.orgx !== "object") {
+  fail(".mcp.json missing mcpServers.orgx");
 }
 
-const orgxServer = manifest.mcpServers.orgx;
+const orgxServer = mcpConfig.mcpServers.orgx;
 if (orgxServer.type !== "http") fail("mcpServers.orgx.type must be 'http'");
 if (typeof orgxServer.url !== "string" || orgxServer.url.trim().length === 0) {
   fail("mcpServers.orgx.url must be a non-empty string");
@@ -78,6 +122,33 @@ if (
   "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp?profile=commander}"
 ) {
   fail("mcpServers.orgx.url must default to the commander MCP profile");
+}
+if (Object.hasOwn(orgxServer, "headers") || Object.hasOwn(orgxServer, "headersHelper")) {
+  fail("mcpServers.orgx must use the server's native OAuth flow, not embedded headers");
+}
+
+let releaseManifest;
+try {
+  releaseManifest = JSON.parse(readFileSync(releaseManifestPath, "utf8"));
+} catch (error) {
+  fail(`invalid JSON in ${releaseManifestPath}: ${String(error)}`);
+}
+if (releaseManifest.plugin_name !== pkg.name) {
+  fail("plugin.manifest.json plugin_name must match package.json name");
+}
+if (releaseManifest.version !== pkg.version) {
+  fail("plugin.manifest.json version must match package.json version");
+}
+if (Object.hasOwn(releaseManifest, "signature")) {
+  fail("unsigned public builds must not claim a signature field");
+}
+const expectedFingerprint = expectedManifestFingerprint(releaseManifest);
+if (releaseManifest.manifest_fingerprint !== expectedFingerprint) {
+  fail(
+    `plugin.manifest.json fingerprint mismatch: expected ${expectedFingerprint}, received ${String(
+      releaseManifest.manifest_fingerprint
+    )}`
+  );
 }
 
 let marketplace;
@@ -110,8 +181,8 @@ if (marketplacePlugin.license !== "MIT") fail("marketplace plugin license must b
 if (marketplacePlugin.repository !== "https://github.com/useorgx/orgx-claude-code-plugin") {
   fail("marketplace plugin repository must point to the public OrgX Claude Code plugin repo");
 }
-if (marketplacePlugin.source?.source !== "github" || marketplacePlugin.source?.repo !== "useorgx/orgx-claude-code-plugin") {
-  fail("marketplace plugin source must use the public GitHub repository");
+if (marketplacePlugin.source !== "./") {
+  fail("marketplace plugin source must reuse the HTTPS-cloned marketplace root");
 }
 
 let hooks;
@@ -175,6 +246,7 @@ if (!Array.isArray(pkg.files)) {
 }
 for (const expectedPath of [
   ".claude-plugin/",
+  ".mcp.json",
   "hooks/",
   "lib/",
   "scripts/",
@@ -233,7 +305,31 @@ for (const file of [
   }
 }
 
+const readme = readFileSync(resolve(root, "README.md"), "utf8");
+if (
+  !readme.includes(
+    "claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin.git"
+  )
+) {
+  fail("README must document the HTTPS marketplace install path");
+}
+if (readme.includes("claude plugin marketplace add useorgx/orgx-claude-code-plugin")) {
+  fail("README must not direct users through the SSH-sensitive GitHub shorthand");
+}
+if (!readme.includes("native OAuth")) {
+  fail("README must explain native OAuth for the MCP connection");
+}
+
+const directorySubmission = readFileSync(directorySubmissionPath, "utf8");
+if (!directorySubmission.includes("Prepared, not submitted")) {
+  fail("directory submission runbook must preserve the not-submitted status boundary");
+}
+if (!directorySubmission.includes("https://platform.claude.com/plugins/submit")) {
+  fail("directory submission runbook must include the official Console portal");
+}
+
 console.log("verify-plugin: ok");
 console.log(`manifest: ${manifest.name}@${manifest.version}`);
 console.log(`marketplace: ${marketplace.name}/${marketplacePlugin.name}`);
 console.log(`mcp server: ${orgxServer.url}`);
+console.log(`release manifest: ${releaseManifest.manifest_fingerprint} (unsigned)`);

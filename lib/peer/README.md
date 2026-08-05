@@ -75,7 +75,7 @@ must use `AskUserQuestion`; local permission policy remains authoritative.
 
 ```
 startPeer()
-  ├─ load plugin.manifest.json (unsigned in dev → 'degraded' in permissive mode)
+  ├─ load plugin.manifest.json (generated public fingerprint; unsigned package)
   ├─ new PeerClient({ baseUrl: wss://useorgx.com, apiKey, workspaceId,
   │                    pluginId: '@useorgx/claude-code-plugin',
   │                    drivers: [new ClaudeCodeDriver(…)] })

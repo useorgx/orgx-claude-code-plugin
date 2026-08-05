@@ -1,9 +1,8 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
-  "version": "0.1.11",
-  "manifest_fingerprint": "",
-  "signature": "",
+  "version": "0.1.12",
+  "manifest_fingerprint": "sha256:1b7e4d51fbd05612136f641a53240073a9de88a3343f88c334397ddef1e5757a",
   "capabilities": ["gateway:drive", "plugin:heartbeat"],
   "driver_ids": ["claude_code"],
-  "notes": "fingerprint + signature are populated by an npm prepublish step; dev builds ship unsigned and receive 'degraded' status from the OrgX server's license heartbeat in permissive mode."
+  "notes": "The fingerprint covers the public manifest identity and is checked before publish. This public source package is not cryptographically signed."
 }

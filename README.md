@@ -24,13 +24,14 @@ Claude Code plugin package for OrgX:
 ## Requirements
 
 - Node.js 18+
-- Claude Code with plugin support
-- OrgX API key (`oxk_...`)
+- Claude Code with plugin and remote MCP OAuth support
+- An OrgX account for authenticated tools
 
 ## Structure
 
 ```text
 .claude-plugin/plugin.json   # Claude plugin manifest
+.mcp.json                    # Native-OAuth OrgX MCP connection
 hooks/hooks.json             # Claude hook declarations
 hooks/scripts/post-reporting-event.mjs
 hooks/scripts/orgx-work-graph-reconcile.mjs
@@ -41,7 +42,8 @@ skills/**/SKILL.md           # Reusable guidance
 
 ## Environment Variables
 
-- `ORGX_API_KEY` (required for live activity/changesets)
+- `ORGX_API_KEY` (optional; `/orgx-login` provisions it for runtime hooks,
+  dispatch, and direct OrgX API calls)
 - `ORGX_MCP_URL` (optional, default: `https://mcp.useorgx.com/mcp?profile=commander`)
 - `ORGX_BASE_URL` (optional, default: `https://www.useorgx.com`)
 - `ORGX_INITIATIVE_ID` (recommended for activity attribution)
@@ -55,10 +57,18 @@ skills/**/SKILL.md           # Reusable guidance
 
 ## Login + Autopilot
 
+The bundled MCP connection uses Claude Code's native OAuth flow. After install,
+open `/mcp`, select `orgx`, and choose **Authenticate**. No API key belongs in
+the plugin manifest or a checked-in settings file.
+
+Core MCP tools work after native OAuth. Runtime hooks, direct API reporting,
+and local autopilot dispatch use a separate machine credential:
+
 1. Run `/orgx-login` (or `node scripts/orgx-login.mjs`) to start browser pairing.
-2. Complete browser auth; key is stored in macOS keychain.
-3. SessionStart hook loads key into `CLAUDE_ENV_FILE`.
-4. Run `/orgx-sync-skills` to pull OrgX skill pack locally.
+2. Complete browser auth; the API key is stored in macOS keychain and is never
+   written to the plugin package.
+3. SessionStart loads the key into `CLAUDE_ENV_FILE` for that Claude session.
+4. Run `/orgx-sync-skills` to pull the OrgX skill pack locally.
 5. Run `/orgx-sync-agents` to refresh OrgX Claude agent profiles.
 6. Run `/orgx-autopilot-start` to dispatch initiative tasks.
 7. Run `/orgx-autopilot-resume` to resume from the latest state file.
@@ -68,7 +78,7 @@ skills/**/SKILL.md           # Reusable guidance
 1. Install deps:
 
 ```bash
-npm install
+npm ci
 ```
 
 2. Validate:
@@ -106,21 +116,27 @@ claude --plugin-dir . --permission-mode bypassPermissions -p "Use the orgx_statu
 This repo also hosts the self-serve OrgX Claude Code marketplace catalog at
 `.claude-plugin/marketplace.json`.
 
-Add the marketplace:
+Add the public marketplace over HTTPS (no GitHub SSH key is required):
 
-```text
-/plugin marketplace add useorgx/orgx-claude-code-plugin
+```bash
+claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin.git --scope user
 ```
 
 Install the plugin:
 
-```text
-/plugin install orgx-claude-code-plugin@orgx
+```bash
+claude plugin install orgx-claude-code-plugin@orgx --scope user
 ```
 
-Run `/orgx-login` after installation to pair a workspace and store the OrgX API
-key in the local keychain. The hosted MCP endpoint defaults to
+Run `/mcp` after installation and authenticate `orgx` through native OAuth. Run
+`/orgx-login` only when you also want runtime reporting, skill/agent sync, or
+autopilot dispatch. The hosted MCP endpoint defaults to
 `https://mcp.useorgx.com/mcp?profile=commander`.
+
+The official Claude plugin directory is a separate distribution channel. Once
+Anthropic publishes the listing, users can install it from the automatically
+available `claude-plugins-official` marketplace. Until publication is confirmed,
+the HTTPS marketplace instructions above are the working public path.
 
 ## Hook Behavior
 
@@ -163,10 +179,12 @@ ORGX_CLAUDE_HOOK_RECONCILE_POST=true ORGX_API_KEY=oxk_... \
 
 ## Next Steps
 
-- Submit to the Claude plugin directory after explicit submitter authorization.
+- Submit the prepared public repository to the Claude plugin directory and
+  retain the provider receipt separately from source readiness.
 - Add E2E harness for real Claude CLI sessions and OrgX assertion checks.
 - Extract reusable shared core from OpenClaw plugin into a standalone package.
 
 Docs:
 - `docs/adr-0001-openclaw-to-claude-plugin.md`
+- `docs/anthropic-plugin-directory-submission.md`
 - `docs/release-checklist.md`

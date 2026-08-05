@@ -41,6 +41,17 @@ export function pickString(...values) {
   return undefined;
 }
 
+export function readPluginVersion(
+  manifestUrl = new URL("../.claude-plugin/plugin.json", import.meta.url)
+) {
+  try {
+    const manifest = JSON.parse(readFileSync(manifestUrl, "utf8"));
+    return pickString(manifest.version, "0.0.0-unknown");
+  } catch {
+    return "0.0.0-unknown";
+  }
+}
+
 function parseBoolean(value, fallback = false) {
   const normalized = pickString(value)?.toLowerCase();
   if (!normalized) return fallback;
@@ -252,7 +263,11 @@ export async function main({ argv = process.argv.slice(2), env = process.env } =
   const projectDir = resolve(
     pickString(args.project_dir, env.CLAUDE_PROJECT_DIR, process.cwd())
   );
-  const pluginVersion = pickString(args.plugin_version, "0.1.0");
+  const pluginVersion = pickString(
+    args.plugin_version,
+    env.ORGX_PLUGIN_VERSION,
+    readPluginVersion()
+  );
   const initiativeId = pickString(args.initiative_id, env.ORGX_INITIATIVE_ID);
   const deviceName = pickString(args.device_name, `${process.platform}-claude`);
   const pairTimeoutMs = Math.max(30_000, parseInteger(args.timeout_sec, 0) * 1000 || DEFAULT_PAIR_TIMEOUT_MS);
