@@ -66,8 +66,8 @@ Anthropic documents two official submission forms:
 
 - Console: `https://platform.claude.com/plugins/submit` — Developer, Admin, or
   Owner on a Console organization.
-- Claude.ai: `https://claude.ai/admin-settings/directory/submissions/plugins/new`
-  — Team or Enterprise organization with directory management access.
+- Claude.ai: `https://claude.ai/settings/plugins/submit` — the in-app plugin
+  submission form documented by Anthropic.
 
 Use one form, not duplicate submissions. The repository must be public. Review
 time varies with queue volume. After publication, Anthropic says updates pushed

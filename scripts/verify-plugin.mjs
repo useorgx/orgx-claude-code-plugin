@@ -327,6 +327,12 @@ if (!directorySubmission.includes("Prepared, not submitted")) {
 if (!directorySubmission.includes("https://platform.claude.com/plugins/submit")) {
   fail("directory submission runbook must include the official Console portal");
 }
+if (!directorySubmission.includes("https://claude.ai/settings/plugins/submit")) {
+  fail("directory submission runbook must include the official Claude.ai portal");
+}
+if (directorySubmission.includes("/admin-settings/directory/submissions/plugins/new")) {
+  fail("directory submission runbook must not include the retired Claude.ai portal path");
+}
 
 console.log("verify-plugin: ok");
 console.log(`manifest: ${manifest.name}@${manifest.version}`);
