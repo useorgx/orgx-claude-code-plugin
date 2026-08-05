@@ -1,17 +1,16 @@
 ---
-description: Get a structured OrgX status snapshot for the current initiative.
-allowed-tools: mcp__orgx__*
+description: Get an OrgX initiative pulse after the user requests a status snapshot.
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_initiative_pulse
 ---
 
-For broad operator reporting, prefer `get_operator_chronicle` with
-`period: "30d"`. If the Claude Code MCP tool list is stale and that tool is not
-callable, use `orgx_recommend` with `mode: "morning_brief"` and present
-`reportingNarrative.briefMarkdown`.
+Call `get_initiative_pulse` once after the user invokes this command and summarize:
 
-For the narrower current initiative snapshot, run `orgx_status_json` and summarize:
 - initiative progress
 - active blockers
-- tasks in `todo` or `in_progress`
+- active work
 - pending decisions
 
-If `ORGX_INITIATIVE_ID` is set, prioritize that initiative in the summary.
+If the tool requires an initiative and the user did not name one, ask which
+initiative to inspect. If the MCP call fails, report the exact error and direct
+the user to `/orgx-login`; do not infer live status from anything outside the
+returned MCP result.

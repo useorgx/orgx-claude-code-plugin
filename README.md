@@ -1,172 +1,108 @@
-# OrgX Claude Code Plugin
+# OrgX for Claude Code
 
-Claude Code plugin package for OrgX:
-- OrgX MCP server wiring (`mcp.useorgx.com`)
-- Operator chronicle reporting for yesterday, week, 30-day decisions, artifacts,
-  PR velocity, goals, initiatives, data gaps, and top priorities
-- Runtime hooks that post activity/progress back to OrgX and spool compact Work
-  Graph events for reconciliation
-- Browser pairing login (`/orgx-login`) with macOS keychain storage
-- Session env hydration from keychain (`hooks/scripts/load-orgx-env.mjs`)
-- Skill-pack sync from OrgX to local `SKILL.md` files (`/orgx-sync-skills`)
-- Agent-pack sync from OrgX to Claude subagent profiles (`/orgx-sync-agents`)
-- Full dispatch/autopilot orchestration (`scripts/run-claude-dispatch-job.mjs`)
-- Project commands, agent profile, and skill guidance
-- CI and architecture ADR for migration planning
+OrgX is a public Claude Code plugin that connects Claude to a focused,
+non-destructive, closed-world OrgX status profile through Claude Code's native
+OAuth flow.
 
-## Repo
+The plugin surface is intentionally small:
 
-- Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
-- License: MIT
-- Initiative: `9b543d86-ea3e-47b8-8109-7160547f2745`
-- Live view: `https://useorgx.com/live/9b543d86-ea3e-47b8-8109-7160547f2745`
+- one remote HTTPS MCP connection
+- three user-invoked commands: `/orgx-login`, `/orgx-status`, and
+  `/orgx-operator-chronicle`
+- one static setup skill for connection troubleshooting
 
-## Requirements
+The installed plugin has no automatic lifecycle hooks, background process,
+local sidecar, shell command, embedded credential, or dynamic skill/agent sync.
+It does not inspect project files or Claude session data. OrgX receives data only
+when the user requests an OrgX MCP operation, subject to the authenticated
+account's permissions.
 
-- Node.js 18+
-- Claude Code with plugin support
-- OrgX API key (`oxk_...`)
+## Install from the public marketplace
 
-## Structure
+```bash
+claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin.git --scope user
+claude plugin install orgx-claude-code-plugin@orgx --scope user
+```
+
+The official `claude-plugins-official` listing is a separate distribution state.
+Until Anthropic confirms publication, the HTTPS marketplace above is the public
+self-serve installation path.
+
+The OrgX wizard is another installation path and requires its own release
+receipt. A compatible wizard build must copy root `.mcp.json` and tolerate the
+placeholder-only `agents/`, `hooks/`, `lib/`, and `scripts/` directories. Do not
+treat an older wizard's successful exit as proof that the OAuth connector was
+installed; verify the cached plugin contains `.mcp.json` and that `/mcp` lists
+`orgx`.
+
+## Connect OrgX
+
+1. Open `/mcp` in Claude Code.
+2. Select `orgx`.
+3. Choose **Authenticate** and complete the OrgX consent flow in the browser.
+4. Return to `/mcp` and confirm that `orgx` is connected.
+
+No API key or bearer token belongs in the plugin manifest, chat, or a checked-in
+file. Installation alone is not proof that OAuth succeeded.
+
+The plugin connects to:
 
 ```text
-.claude-plugin/plugin.json   # Claude plugin manifest
-hooks/hooks.json             # Claude hook declarations
-hooks/scripts/post-reporting-event.mjs
-hooks/scripts/orgx-work-graph-reconcile.mjs
-commands/*.md                # Slash commands
-agents/*.md                  # Subagent profiles
-skills/**/SKILL.md           # Reusable guidance
+https://mcp.useorgx.com/mcp?profile=claude-directory
 ```
 
-## Environment Variables
+That closed-world profile exposes exactly seven OrgX tools:
 
-- `ORGX_API_KEY` (required for live activity/changesets)
-- `ORGX_MCP_URL` (optional, default: `https://mcp.useorgx.com/mcp?profile=commander`)
-- `ORGX_BASE_URL` (optional, default: `https://www.useorgx.com`)
-- `ORGX_INITIATIVE_ID` (recommended for activity attribution)
-- `ORGX_USER_ID` (optional header for API attribution)
-- `ORGX_CLAUDE_PLUGIN_DIR` (optional plugin root override for dispatch)
-- `ORGX_SKILLS_DIR` (optional skills root override; default `.claude/orgx-skills`)
-- `ORGX_SKILL_PACK_NAME` (optional; default `orgx-agent-suite`)
-- `ORGX_RUNTIME_HOOK_URL` and `ORGX_HOOK_TOKEN` (optional local runtime relay)
-- `ORGX_WIZARD_HOOK_OUTBOX` (optional local JSONL outbox; default
-  `~/.config/useorgx/wizard/hooks/events.jsonl`)
+- `orgx_search`
+- `orgx_inspect`
+- `orgx_recommend`
+- `get_agent_status`
+- `get_initiative_pulse`
+- `get_morning_brief`
+- `get_operator_chronicle`
 
-## Login + Autopilot
+The profile does not expose business-data deletion or state-transition tools.
+Standard OrgX MCP usage may be recorded by the hosted service for operation and
+metering. The installed plugin adds no local telemetry or background reporting.
 
-1. Run `/orgx-login` (or `node scripts/orgx-login.mjs`) to start browser pairing.
-2. Complete browser auth; key is stored in macOS keychain.
-3. SessionStart hook loads key into `CLAUDE_ENV_FILE`.
-4. Run `/orgx-sync-skills` to pull OrgX skill pack locally.
-5. Run `/orgx-sync-agents` to refresh OrgX Claude agent profiles.
-6. Run `/orgx-autopilot-start` to dispatch initiative tasks.
-7. Run `/orgx-autopilot-resume` to resume from the latest state file.
+## User-invoked workflows
 
-## Local Development
+- `/orgx-login` explains the native OAuth connection flow.
+- `/orgx-status` calls `get_initiative_pulse` for a requested initiative.
+- `/orgx-operator-chronicle` calls `get_operator_chronicle` for the last 30
+  days.
 
-1. Install deps:
+The commands do not run automatically and do not call unrelated software.
+
+## Data and support
+
+- Privacy: https://useorgx.com/privacy
+- Terms: https://useorgx.com/terms
+- Support: https://useorgx.com/support
+- Security contact: reviewers@useorgx.com
+- License: MIT
+
+## Development and validation
+
+Requirements: Node.js 18+ and a current Claude Code CLI.
 
 ```bash
-npm install
-```
-
-2. Validate:
-
-```bash
+npm ci
 npm run check
+claude plugin validate . --strict
+npm pack --dry-run --json
 ```
 
-3. Run Claude with local plugin directory:
-
-```bash
-npm run dev:claude
-```
-
-Or directly:
-
-```bash
-claude --plugin-dir /Users/hopeatina/Code/orgx-claude-code-plugin
-```
-
-4. Smoke test plugin loading:
+Run the local plugin in an isolated Claude session:
 
 ```bash
 claude --plugin-dir . -p "Reply with exactly: plugin-smoke-ok"
 ```
 
-5. Smoke test MCP tool invocation:
+Release and directory-review evidence is tracked in:
 
-```bash
-claude --plugin-dir . --permission-mode bypassPermissions -p "Use the orgx_status_json MCP tool and return one-line summary."
-```
-
-## Claude Code Marketplace
-
-This repo also hosts the self-serve OrgX Claude Code marketplace catalog at
-`.claude-plugin/marketplace.json`.
-
-Add the marketplace:
-
-```text
-/plugin marketplace add useorgx/orgx-claude-code-plugin
-```
-
-Install the plugin:
-
-```text
-/plugin install orgx-claude-code-plugin@orgx
-```
-
-Run `/orgx-login` after installation to pair a workspace and store the OrgX API
-key in the local keychain. The hosted MCP endpoint defaults to
-`https://mcp.useorgx.com/mcp?profile=commander`.
-
-## Hook Behavior
-
-`hooks/scripts/post-reporting-event.mjs` posts:
-- activity events -> `/api/client/live/activity`
-- optional completion changeset -> `/api/client/live/changesets/apply`
-- optional local runtime relay -> `ORGX_RUNTIME_HOOK_URL`
-- compact, redacted Work Graph hook events -> local wizard outbox
-
-The `Stop` hook then runs `hooks/scripts/orgx-reconcile-hook.mjs`, which turns
-the local outbox into a summary-only Work Graph report at
-`~/.config/useorgx/wizard/hooks/reports/latest-work-graph-report.json`.
-
-The script is best-effort and exits cleanly on failures to avoid interrupting Claude sessions.
-It never writes raw transcripts or full hook payloads; the reconciler should keep
-raw client history local and promote only redacted summaries, evidence refs,
-Work Graph fingerprints, and approved OrgX activity.
-
-For live reporting, use MCP before hooks: `get_operator_chronicle` is the
-preferred tool when Claude Code exposes it. If Claude Code has a stale MCP tool
-list, use `orgx_recommend` with `mode: "morning_brief"` and present
-`reportingNarrative.briefMarkdown`.
-
-Dry-run reconciliation does not require OrgX credentials:
-
-```bash
-orgx-claude-code-reconcile-hooks \
-  --outbox ~/.config/useorgx/wizard/hooks/events.jsonl \
-  --output /tmp/orgx-work-graph-report.json
-```
-
-Automatic Stop reconciliation writes locally by default. Publishing is explicit
-and requires both an API key and an opt-in flag such as
-`ORGX_CLAUDE_HOOK_RECONCILE_POST=true`:
-
-```bash
-ORGX_CLAUDE_HOOK_RECONCILE_POST=true ORGX_API_KEY=oxk_... \
-  orgx-claude-code-reconcile-hooks --post
-```
-
-## Next Steps
-
-- Submit to the Claude plugin directory after explicit submitter authorization.
-- Add E2E harness for real Claude CLI sessions and OrgX assertion checks.
-- Extract reusable shared core from OpenClaw plugin into a standalone package.
-
-Docs:
-- `docs/adr-0001-openclaw-to-claude-plugin.md`
 - `docs/release-checklist.md`
+- `docs/anthropic-plugin-directory-submission.md`
+
+Source readiness, submission, review, approval, directory publication, and an
+Anthropic Verified badge are distinct states.

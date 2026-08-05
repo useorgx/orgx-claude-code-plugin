@@ -1,15 +1,14 @@
 ---
-description: Pair this project with OrgX via browser login and store API key in macOS keychain.
-allowed-tools: Bash,Read,Write
-argument-hint: [initiative_id]
+description: Authenticate the bundled OrgX MCP connection through Claude Code's native OAuth flow.
 ---
 
-Run the login helper:
+Guide the user through the built-in connection flow:
 
-!`node ${CLAUDE_PLUGIN_ROOT}/scripts/orgx-login.mjs --project_dir="${CLAUDE_PROJECT_DIR:-$PWD}" --initiative_id="${1:-$ORGX_INITIATIVE_ID}"`
+1. Ask the user to open `/mcp` in Claude Code.
+2. Ask them to select `orgx` and choose **Authenticate**.
+3. Tell them to complete the OrgX sign-in and consent screen in their browser.
+4. After they return, ask them to confirm that `/mcp` reports `orgx` as connected.
 
-Then summarize:
-- whether pairing succeeded
-- which initiative id is configured
-- whether skill-pack sync succeeded
-- next command to start autopilot dispatch
+Never ask the user to paste an access token, API key, password, cookie, or OAuth
+code into chat or a project file. Do not claim authentication succeeded until
+Claude Code shows the connected state.

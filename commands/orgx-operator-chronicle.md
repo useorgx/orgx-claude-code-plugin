@@ -1,14 +1,10 @@
 ---
-description: Show the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
-allowed-tools: mcp__orgx__*
+description: Get the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_operator_chronicle
 ---
 
-Prefer `get_operator_chronicle` with `period: "30d"` when Claude Code exposes
-it in the OrgX MCP tool list.
-
-If the Claude Code MCP tool list is stale and `get_operator_chronicle` is not
-callable, use `orgx_recommend` with `mode: "morning_brief"` as the compatibility
-fallback.
+Call `get_operator_chronicle` with `period: "30d"` after the user invokes this
+command. Do not call other external tools unless the user separately asks.
 
 Lead with `reportingNarrative.briefMarkdown`, then call out:
 
@@ -17,8 +13,8 @@ Lead with `reportingNarrative.briefMarkdown`, then call out:
 - PR velocity
 - goals and initiatives
 - data gaps
-- first recommended action
+- the first recommended action
 
-Be explicit when goals are provisional signals from `decision_requests` rather
-than accepted OrgX goals. Do not treat Claude hook outbox records as live
-reporting proof; hooks are only a reconciliation backstop.
+Be explicit when goals are provisional signals rather than accepted OrgX goals.
+If the MCP call fails, report the exact connection or tool error and direct the
+user to `/orgx-login`; do not fabricate a briefing.

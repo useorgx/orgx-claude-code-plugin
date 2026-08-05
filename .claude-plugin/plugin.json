@@ -1,19 +1,22 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "orgx-claude-code-plugin",
-  "version": "0.1.11",
-  "description": "OrgX MCP tools, operator chronicle reporting, runtime telemetry hooks, and Work Graph reconciliation for Claude Code.",
+  "displayName": "OrgX",
+  "version": "0.1.12",
+  "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
   "author": {
     "name": "OrgX Team",
+    "email": "reviewers@useorgx.com",
     "url": "https://useorgx.com"
   },
-  "mcpServers": {
-    "orgx": {
-      "type": "http",
-      "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp?profile=commander}",
-      "headers": {
-        "Authorization": "Bearer ${ORGX_API_KEY:-}",
-        "X-Orgx-User-Id": "${ORGX_USER_ID:-}"
-      }
-    }
-  }
+  "homepage": "https://useorgx.com",
+  "repository": "https://github.com/useorgx/orgx-claude-code-plugin",
+  "license": "MIT",
+  "keywords": [
+    "orgx",
+    "mcp",
+    "productivity",
+    "status",
+    "native-oauth"
+  ]
 }

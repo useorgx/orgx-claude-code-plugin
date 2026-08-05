@@ -1,9 +1,23 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
-  "version": "0.1.11",
-  "manifest_fingerprint": "",
-  "signature": "",
-  "capabilities": ["gateway:drive", "plugin:heartbeat"],
-  "driver_ids": ["claude_code"],
-  "notes": "fingerprint + signature are populated by an npm prepublish step; dev builds ship unsigned and receive 'degraded' status from the OrgX server's license heartbeat in permissive mode."
+  "version": "0.1.12",
+  "manifest_fingerprint": "sha256:2fb087d3a45bd2c79c6507930c92cf5dff328e1f7007b24deb9602aa28854337",
+  "capabilities": [
+    "commands:user-invoked",
+    "mcp:remote-oauth",
+    "skills:static"
+  ],
+  "mcp_tools": [
+    "get_agent_status",
+    "get_initiative_pulse",
+    "get_morning_brief",
+    "get_operator_chronicle",
+    "orgx_inspect",
+    "orgx_recommend",
+    "orgx_search"
+  ],
+  "driver_ids": [
+    "claude_code"
+  ],
+  "notes": "The public plugin loads only static guidance, user-invoked commands, and a focused, non-destructive, closed-world seven-tool OrgX MCP status profile. Standard hosted OrgX MCP usage may be recorded. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
 }

@@ -1,10 +1,10 @@
 {
   "name": "orgx",
-  "description": "OrgX Claude Code plugins for agent memory, runtime telemetry, skill sync, and Work Graph orchestration.",
-  "version": "0.1.0",
+  "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
+  "version": "0.1.12",
   "metadata": {
-    "description": "OrgX Claude Code plugins for agent memory, runtime telemetry, skill sync, and Work Graph orchestration.",
-    "version": "0.1.0"
+    "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
+    "version": "0.1.12"
   },
   "owner": {
     "name": "OrgX Team",
@@ -13,12 +13,10 @@
   "plugins": [
     {
       "name": "orgx-claude-code-plugin",
-      "description": "OrgX MCP tools, operator chronicle reporting, runtime telemetry hooks, skill sync, and agent dispatch orchestration for Claude Code.",
-      "source": {
-        "source": "github",
-        "repo": "useorgx/orgx-claude-code-plugin"
-      },
-      "version": "0.1.11",
+      "displayName": "OrgX",
+      "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
+      "source": "./",
+      "version": "0.1.12",
       "author": {
         "name": "OrgX Team",
         "email": "reviewers@useorgx.com"
@@ -30,16 +28,15 @@
       "keywords": [
         "orgx",
         "mcp",
-        "agents",
-        "work-graph",
-        "runtime-telemetry",
-        "skills"
+        "productivity",
+        "status",
+        "native-oauth"
       ],
       "tags": [
         "mcp",
-        "agent-memory",
-        "runtime-reporting",
-        "skill-sync"
+        "organizational-context",
+        "initiative-status",
+        "operator-briefing"
       ]
     }
   ]
