@@ -19,5 +19,5 @@
   "driver_ids": [
     "claude_code"
   ],
-  "notes": "The public plugin loads only static guidance, user-invoked commands, and the seven-tool read-only OrgX MCP profile. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
+  "notes": "The public plugin loads only static guidance, user-invoked commands, and a focused, non-destructive, closed-world seven-tool OrgX MCP status profile. Standard hosted OrgX MCP usage may be recorded. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
 }

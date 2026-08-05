@@ -75,6 +75,20 @@ if (manifest.repository !== "https://github.com/useorgx/orgx-claude-code-plugin"
 }
 if (manifest.license !== "MIT") fail("plugin license must be MIT");
 
+const expectedDescription =
+  "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.";
+for (const [label, description] of [
+  ["plugin manifest", manifest.description],
+  ["marketplace", marketplace.description],
+  ["marketplace metadata", marketplace.metadata?.description],
+  ["marketplace plugin", marketplace.plugins?.[0]?.description],
+  ["package", pkg.description],
+]) {
+  if (description !== expectedDescription) {
+    fail(`${label} description must be ${expectedDescription}`);
+  }
+}
+
 const versions = [
   pkg.version,
   lock.version,
@@ -241,7 +255,7 @@ for (const toolName of commandToolContracts.values()) {
 }
 
 const readme = readFileSync(resolve(root, "README.md"), "utf8");
-if (!readme.includes("exactly seven directory-safe read tools")) {
+if (!readme.includes("closed-world profile exposes exactly seven OrgX tools")) {
   fail("README must describe the exact seven-tool directory profile");
 }
 for (const toolName of expectedDirectoryTools) {
@@ -251,6 +265,28 @@ for (const toolName of expectedDirectoryTools) {
 }
 if (readme.includes("- `orgx_bootstrap`")) {
   fail("README must not advertise stateful orgx_bootstrap");
+}
+if (!readme.includes("Standard OrgX MCP usage may be recorded")) {
+  fail("README must disclose standard hosted OrgX MCP usage recording");
+}
+
+const publicCopyPaths = [
+  paths.package,
+  paths.manifest,
+  paths.marketplace,
+  paths.releaseManifest,
+  resolve(root, "README.md"),
+  resolve(root, "commands", "orgx-status.md"),
+  resolve(root, "commands", "orgx-operator-chronicle.md"),
+  resolve(root, "skills", "orgx-setup", "SKILL.md"),
+  paths.submission,
+  resolve(root, "docs", "release-checklist.md"),
+];
+const overbroadAccessClaim = /read(?:-| )only|seven[^\n]*read tools|directory-safe read/iu;
+for (const path of publicCopyPaths) {
+  if (overbroadAccessClaim.test(readFileSync(path, "utf8"))) {
+    fail(`overbroad access claim found in ${relative(root, path)}`);
+  }
 }
 const expectedFingerprint = expectedManifestFingerprint(releaseManifest);
 if (releaseManifest.manifest_fingerprint !== expectedFingerprint) {

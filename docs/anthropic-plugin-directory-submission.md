@@ -19,13 +19,16 @@ separate evidence.
 - Support: `https://useorgx.com/support`
 - Maintainer: `reviewers@useorgx.com`
 - License: `MIT`
-- Short description: `Read OrgX initiative status, search organizational context, and review operator briefings from Claude Code through native OAuth.`
+- Short description: `Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.`
 
 The plugin contains a remote HTTPS MCP configuration, three user-invoked
 commands, and one static setup skill. It loads no automatic hooks or local
 executables. It does not fetch skill or agent instructions from OrgX. It does
 not read Claude memory, session history, summaries, or user files. The MCP
 server receives only the inputs needed for an OrgX action the user requests.
+The fixed seven-tool profile exposes no destructive business action. Standard
+OrgX MCP usage may be recorded by the hosted service for operation and metering;
+the plugin itself adds no local telemetry or background reporting.
 
 ## Policy mapping
 
@@ -66,7 +69,7 @@ Official policy and submission documentation:
 6. Open `/mcp`, select `orgx`, and complete native OAuth.
 7. Confirm the endpoint is
    `https://mcp.useorgx.com/mcp?profile=claude-directory` and the server is
-   connected. Confirm it advertises exactly these seven read tools:
+   connected. Confirm it advertises exactly these seven profile tools:
 
    - `orgx_search`
    - `orgx_inspect`

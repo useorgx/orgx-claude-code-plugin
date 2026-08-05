@@ -14,15 +14,17 @@
 
 - `.mcp.json` contains only the native-OAuth HTTPS endpoint
   `https://mcp.useorgx.com/mcp?profile=claude-directory`
-- `plugin.manifest.json` lists exactly seven read tools and does not list
+- `plugin.manifest.json` lists exactly seven focused profile tools and does not list
   `orgx_bootstrap`
-- `commands/` contains only user-invoked, OrgX-specific read/setup workflows
+- `commands/` contains only user-invoked, OrgX-specific status/setup workflows
 - `skills/` contains only static, human-readable setup guidance
 - no automatic hook configuration is present
 - no subagent profile is present
 - no local executable, sidecar, dispatch, attention, telemetry, transcript,
   skill-sync, or agent-sync runtime is packaged
 - no MCP header, token, API key, password, cookie, or OAuth code is embedded
+- standard hosted OrgX MCP usage may be recorded, but the installed plugin adds
+  no local telemetry or background reporting
 
 ## Deterministic gates
 
@@ -63,8 +65,8 @@ CLAUDE_CONFIG_DIR="$plugin_smoke_root/config" \
 
 Installation is not authentication. Open `/mcp` and verify native OAuth and the
 connected state separately. After authentication, verify the server advertises
-exactly the seven tools in `plugin.manifest.json` and exercise each one with
-seeded reviewer data.
+exactly the seven tools in `plugin.manifest.json`, exposes no destructive
+business action, and exercise each tool with seeded reviewer data.
 
 ## OrgX wizard compatibility
 

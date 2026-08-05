@@ -1,9 +1,9 @@
 {
   "name": "orgx",
-  "description": "Connect Claude Code to the read-only OrgX MCP profile with native OAuth.",
+  "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
   "version": "0.1.12",
   "metadata": {
-    "description": "Connect Claude Code to the read-only OrgX MCP profile with native OAuth.",
+    "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
     "version": "0.1.12"
   },
   "owner": {
@@ -14,7 +14,7 @@
     {
       "name": "orgx-claude-code-plugin",
       "displayName": "OrgX",
-      "description": "Read OrgX initiative status, search organizational context, and review operator briefings from Claude Code through native OAuth.",
+      "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
       "source": "./",
       "version": "0.1.12",
       "author": {

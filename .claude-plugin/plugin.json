@@ -3,7 +3,7 @@
   "name": "orgx-claude-code-plugin",
   "displayName": "OrgX",
   "version": "0.1.12",
-  "description": "Connect Claude Code to OrgX through a read-only, native-OAuth MCP profile and user-invoked status workflows.",
+  "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
   "author": {
     "name": "OrgX Team",
     "email": "reviewers@useorgx.com",

@@ -110,7 +110,7 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
   }
 });
 
-test("public catalog contains exactly seven read tools", () => {
+test("public catalog contains exactly seven focused profile tools", () => {
   const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
   assert.deepEqual([...manifest.mcp_tools].sort(), [
     "get_agent_status",
@@ -122,6 +122,38 @@ test("public catalog contains exactly seven read tools", () => {
     "orgx_search",
   ]);
   assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
+});
+
+test("public copy uses the audited non-destructive profile boundary", () => {
+  const expectedDescription =
+    "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.";
+  const pluginManifest = JSON.parse(
+    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
+  );
+  const marketplace = JSON.parse(
+    readFileSync(resolve(root, ".claude-plugin", "marketplace.json"), "utf8")
+  );
+  const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+  assert.equal(pluginManifest.description, expectedDescription);
+  assert.equal(marketplace.description, expectedDescription);
+  assert.equal(marketplace.metadata.description, expectedDescription);
+  assert.equal(marketplace.plugins[0].description, expectedDescription);
+  assert.equal(pkg.description, expectedDescription);
+
+  const publicCopy = [
+    "README.md",
+    "plugin.manifest.json",
+    "commands/orgx-status.md",
+    "commands/orgx-operator-chronicle.md",
+    "skills/orgx-setup/SKILL.md",
+    "docs/anthropic-plugin-directory-submission.md",
+    "docs/release-checklist.md",
+  ].map((path) => readFileSync(resolve(root, path), "utf8"));
+  const overbroadAccessClaim = /read(?:-| )only|seven[^\n]*read tools|directory-safe read/iu;
+  for (const text of publicCopy) {
+    assert.doesNotMatch(text, overbroadAccessClaim);
+  }
+  assert.match(publicCopy[0], /Standard OrgX MCP usage may be recorded/u);
 });
 
 test("submission runbook uses Anthropic's current plugin portals", () => {

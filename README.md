@@ -1,7 +1,8 @@
 # OrgX for Claude Code
 
-OrgX is a public Claude Code plugin that connects Claude to the read-only OrgX
-MCP profile through Claude Code's native OAuth flow.
+OrgX is a public Claude Code plugin that connects Claude to a focused,
+non-destructive, closed-world OrgX status profile through Claude Code's native
+OAuth flow.
 
 The plugin surface is intentionally small:
 
@@ -50,7 +51,7 @@ The plugin connects to:
 https://mcp.useorgx.com/mcp?profile=claude-directory
 ```
 
-That profile advertises exactly seven directory-safe read tools:
+That closed-world profile exposes exactly seven OrgX tools:
 
 - `orgx_search`
 - `orgx_inspect`
@@ -59,6 +60,10 @@ That profile advertises exactly seven directory-safe read tools:
 - `get_initiative_pulse`
 - `get_morning_brief`
 - `get_operator_chronicle`
+
+The profile does not expose business-data deletion or state-transition tools.
+Standard OrgX MCP usage may be recorded by the hosted service for operation and
+metering. The installed plugin adds no local telemetry or background reporting.
 
 ## User-invoked workflows
 

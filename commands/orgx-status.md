@@ -1,5 +1,5 @@
 ---
-description: Read an OrgX initiative pulse after the user requests a status snapshot.
+description: Get an OrgX initiative pulse after the user requests a status snapshot.
 allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_initiative_pulse
 ---
 

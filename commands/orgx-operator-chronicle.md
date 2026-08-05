@@ -1,5 +1,5 @@
 ---
-description: Read the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
+description: Get the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
 allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_operator_chronicle
 ---
 
