@@ -2,7 +2,7 @@
   "mcpServers": {
     "orgx": {
       "type": "http",
-      "url": "${ORGX_MCP_URL:-https://mcp.useorgx.com/mcp?profile=commander}"
+      "url": "https://mcp.useorgx.com/mcp?profile=claude-directory"
     }
   }
 }

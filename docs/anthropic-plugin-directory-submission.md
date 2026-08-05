@@ -1,94 +1,123 @@
 # Anthropic Plugin Directory Submission
 
-## Status
+## Current state
 
-**Prepared, not submitted.** Source readiness, a portal submission, automated
-review, publication in `claude-plugins-official`, and Anthropic Verified status
-are separate states. Record each provider receipt independently.
+**Prepared, not submitted.** A source commit, portal submission, automated
+screening result, directory publication, and Anthropic Verified status require
+separate evidence.
 
-## Copy-ready listing facts
+## Copy-ready listing
 
 - Name: `OrgX`
 - Plugin ID: `orgx-claude-code-plugin`
-- Version prepared for review: `0.1.12`
-- Public repository: `https://github.com/useorgx/orgx-claude-code-plugin`
+- Version: `0.1.12`
+- Category: `productivity`
+- Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
 - Homepage: `https://useorgx.com`
 - Privacy: `https://useorgx.com/privacy`
 - Terms: `https://useorgx.com/terms`
 - Support: `https://useorgx.com/support`
+- Maintainer: `reviewers@useorgx.com`
 - License: `MIT`
-- Maintainer contact: `reviewers@useorgx.com`
-- Category: `productivity`
-- Short description: `Connect Claude Code to OrgX MCP tools, operator reporting, runtime telemetry, skill sync, and Work Graph orchestration.`
+- Short description: `Read OrgX initiative status, search organizational context, and review operator briefings from Claude Code through native OAuth.`
 
-The plugin bundles OrgX skills, commands, agents, passive runtime hooks, and a
-remote HTTPS MCP connection. The MCP connection authenticates through Claude
-Code's native OAuth flow. The manifest contains no bearer token or API key.
-Optional runtime reporting and autopilot features use `/orgx-login`, which
-stores a machine API key in macOS keychain and writes only non-secret metadata
-to the project.
+The plugin contains a remote HTTPS MCP configuration, three user-invoked
+commands, and one static setup skill. It loads no automatic hooks or local
+executables. It does not fetch skill or agent instructions from OrgX. It does
+not read Claude memory, session history, summaries, or user files. The MCP
+server receives only the inputs needed for an OrgX action the user requests.
+
+## Policy mapping
+
+The package was narrowed for the Anthropic Software Directory Policy dated
+April 15, 2026:
+
+- Sections 1D and 1F: no automatic context collection and no session/file
+  extraction paths.
+- Sections 2A and 2B: every loaded command and skill is narrow and matches its
+  actual behavior.
+- Section 2D: user-invoked workflows name only the bundled OrgX connector.
+- Section 2F: all behavioral guidance is static in this repository; the plugin
+  does not download instructions for Claude to execute.
+- Section 3A: the public privacy policy explains remote service data handling.
+- Sections 3B and 3C: public support, source, setup, and troubleshooting paths
+  are provided.
+
+Official policy and submission documentation:
+
+- `https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy`
+- `https://support.claude.com/en/articles/13145338-anthropic-software-directory-terms`
+- `https://claude.com/docs/plugins/submit`
 
 ## Reviewer path
 
 1. Clone the public repository over HTTPS.
 2. Run `npm ci` and `npm run check`.
 3. Run `claude plugin validate . --strict`.
-4. Add the self-hosted marketplace over HTTPS:
+4. Inspect `npm pack --dry-run --json`; the artifact must contain no hooks,
+   agents, sidecar, telemetry client, dispatch runtime, or sync runtime.
+5. Install from the self-hosted public marketplace:
 
    ```bash
    claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin.git --scope user
    claude plugin install orgx-claude-code-plugin@orgx --scope user
    ```
 
-5. Open `/mcp`, select `orgx`, and complete native OAuth.
-6. Confirm OrgX MCP tools are connected. Installation alone is not an
-   authentication receipt.
-7. Run `/orgx-login` only if reviewing optional runtime reporting, skill/agent
-   sync, or autopilot dispatch. Never place reviewer credentials in this repo,
-   an issue, a PR, or a screenshot; deliver them through the provider's secure
-   submission field if requested.
+6. Open `/mcp`, select `orgx`, and complete native OAuth.
+7. Confirm the endpoint is
+   `https://mcp.useorgx.com/mcp?profile=claude-directory` and the server is
+   connected.
+8. Use the provider's secure reviewer-credential field for the populated test
+   account. Never put reviewer credentials in this repository, a PR, an issue,
+   or a screenshot.
 
-## Required evidence before submission
+## Working examples
 
+1. Invoke `/orgx-status`, select the seeded initiative if prompted, and verify
+   that the response identifies progress and blockers from
+   `get_initiative_pulse`.
+2. Invoke `/orgx-operator-chronicle` and verify that the response separates
+   decisions, artifacts, goals, initiatives, data gaps, and the first action.
+3. Ask Claude to use `orgx_search` to find a seeded project term, then use
+   `orgx_inspect` only on a returned OrgX entity.
+
+## Pre-submission evidence
+
+- [ ] PR merged to the public default branch
 - [ ] `npm ci`
 - [ ] `npm run check`
-- [ ] `npm pack --dry-run --json` inspected for the allowlisted package surface
+- [ ] `npm run manifest:check`
 - [ ] `claude plugin validate . --strict`
-- [ ] clean local marketplace install succeeds
-- [ ] clean remote HTTPS marketplace install succeeds with SSH disabled
-- [ ] `/mcp` presents native OAuth for the hosted OrgX server
-- [ ] public privacy, terms, support, and repository URLs respond successfully
-- [ ] source commit is merged to the public default branch
+- [ ] package-content inspection passed
+- [ ] clean local marketplace install passed
+- [ ] clean remote HTTPS marketplace install passed with SSH disabled
+- [ ] released OrgX wizard copied `.mcp.json` and pruned legacy runtime files
+- [ ] native OAuth completed with the reviewer account
+- [ ] all advertised MCP tools exercised with seeded data
+- [ ] privacy, terms, support, repository, and MCP URLs respond publicly
 
-## Submission portals and authority
+## Official submission portals
 
-Anthropic documents two official submission forms:
+Anthropic currently documents two in-app forms. Submit through exactly one to
+avoid duplicate review records:
 
-- Console: `https://platform.claude.com/plugins/submit` — Developer, Admin, or
-  Owner on a Console organization.
-- Claude.ai: `https://claude.ai/settings/plugins/submit` — the in-app plugin
-  submission form documented by Anthropic.
+- Claude.ai: `https://claude.ai/admin-settings/directory/submissions/plugins/new`
+  — requires a Team or Enterprise organization plus directory-management
+  access; organization Owners have access by default.
+- Console: `https://platform.claude.com/plugins/submit`
+  — requires Developer, Admin, or Owner on a Console organization.
 
-Use one form, not duplicate submissions. The repository must be public. Review
-time varies with queue volume. After publication, Anthropic says updates pushed
-to the GitHub repository are mirrored and screened automatically; a source
-merge is still not proof that the directory has published the update.
-
-Official references:
-
-- `https://claude.com/docs/plugins/submit`
-- `https://code.claude.com/docs/en/plugins-reference`
-- `https://code.claude.com/docs/en/plugin-marketplaces`
+The public repository is required. After publication, Anthropic says updates
+to the repository are mirrored and screened automatically; a source merge is
+not itself evidence of a published directory update.
 
 ## Receipt ledger
 
-Keep this section factual. Do not fill a later state from inference.
-
-| State | Evidence |
+| State | Required evidence |
 | --- | --- |
-| Source prepared | PR URL and merge SHA |
-| Submitted | Provider submission ID, timestamp, and screenshot or confirmation URL |
+| Source prepared | PR URL and reviewed commit SHA |
+| Submitted | Provider receipt or submission ID with timestamp |
 | Review pending | Provider status page or email receipt |
 | Approved | Provider approval notice |
-| Published | Installable `orgx-claude-code-plugin@claude-plugins-official` result |
+| Published | Fresh install from `claude-plugins-official` |
 | Anthropic Verified | Badge visible in the provider directory |

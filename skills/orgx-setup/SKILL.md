@@ -1,23 +1,19 @@
 ---
-description: Set up or repair OrgX authentication after installing the OrgX Claude Code plugin. Use when OrgX MCP tools need login, when runtime reporting is not configured, or when the user asks how to connect OrgX.
+name: orgx-setup
+description: Set up or repair the bundled OrgX MCP connection. Use only when the user asks to connect OrgX or when an OrgX MCP call reports an authentication error.
 ---
 
 # Set up OrgX
 
-Keep the two authentication paths distinct:
+Use only Claude Code's native OAuth connection flow:
 
 1. For OrgX MCP tools, open `/mcp`, select `orgx`, and choose **Authenticate**.
    Claude Code completes the hosted server's native OAuth flow. Never ask the
    user to paste an access token into chat or into a checked-in file.
 2. Verify the MCP server is connected in `/mcp`. A visible server entry alone
    is not proof of authentication; confirm the connected/authenticated state.
-3. Core MCP usage is ready at this point.
-4. Only when the user wants runtime hooks, direct API reporting, skill/agent
-   sync, or autopilot dispatch, run `/orgx-login`. That browser-pairing helper
-   stores the resulting machine API key in macOS keychain and writes only
-   non-secret metadata to `.claude/orgx.local.json`.
-5. Restart or reload the Claude Code session after `/orgx-login` so the
-   SessionStart hook can hydrate the key into that session's environment.
+3. Retry only the OrgX action the user requested.
 
-If authentication fails, report the exact `/mcp` state or `/orgx-login` error.
-Do not claim the plugin is connected based only on installation success.
+If authentication fails, use only the `/mcp` state and its returned error for
+troubleshooting. Do not inspect unrelated local or Claude data. Do not claim the
+plugin is connected based only on installation.

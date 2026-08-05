@@ -1,8 +1,14 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
   "version": "0.1.12",
-  "manifest_fingerprint": "sha256:1b7e4d51fbd05612136f641a53240073a9de88a3343f88c334397ddef1e5757a",
-  "capabilities": ["gateway:drive", "plugin:heartbeat"],
-  "driver_ids": ["claude_code"],
-  "notes": "The fingerprint covers the public manifest identity and is checked before publish. This public source package is not cryptographically signed."
+  "manifest_fingerprint": "sha256:f602d5de21359114bff7862b7d54901e2c05a304ce450ab54bc84e8844df1d82",
+  "capabilities": [
+    "commands:user-invoked",
+    "mcp:remote-oauth",
+    "skills:static"
+  ],
+  "driver_ids": [
+    "claude_code"
+  ],
+  "notes": "The public plugin loads only static guidance, user-invoked commands, and the read-only OrgX MCP profile. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
 }
