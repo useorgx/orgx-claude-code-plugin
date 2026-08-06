@@ -51,6 +51,7 @@ Official policy and submission documentation:
 - `https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy`
 - `https://support.claude.com/en/articles/13145338-anthropic-software-directory-terms`
 - `https://claude.com/docs/plugins/submit`
+- `https://code.claude.com/docs/en/plugins`
 
 ## Reviewer path
 
@@ -66,7 +67,8 @@ Official policy and submission documentation:
    claude plugin install orgx-claude-code-plugin@orgx --scope user
    ```
 
-6. Open `/mcp`, select `orgx`, and complete native OAuth.
+6. Invoke `/orgx-claude-code-plugin:orgx-login` (or open `/mcp` directly),
+   select `orgx`, and complete native OAuth.
 7. Confirm the endpoint is
    `https://mcp.useorgx.com/mcp?profile=claude-directory` and the server is
    connected. Confirm it advertises exactly these seven profile tools:
@@ -85,11 +87,12 @@ Official policy and submission documentation:
 
 ## Working examples
 
-1. Invoke `/orgx-status`, select the seeded initiative if prompted, and verify
-   that the response identifies progress and blockers from
-   `get_initiative_pulse`.
-2. Invoke `/orgx-operator-chronicle` and verify that the response separates
-   decisions, artifacts, goals, initiatives, data gaps, and the first action.
+1. Invoke `/orgx-claude-code-plugin:orgx-status`, select the seeded initiative
+   if prompted, and verify that the response identifies progress and blockers
+   from `get_initiative_pulse`.
+2. Invoke `/orgx-claude-code-plugin:orgx-operator-chronicle` and verify that the
+   response separates decisions, artifacts, goals, initiatives, data gaps, and
+   the first action.
 3. Ask Claude to use `orgx_search` to find a seeded project term, then use
    `orgx_inspect` only on a returned OrgX entity.
 
@@ -123,6 +126,12 @@ The public repository is required. After publication, Anthropic says updates
 to the repository are mirrored and screened automatically; a source merge is
 not itself evidence of a published directory update.
 
+Anthropic's documentation currently uses both general, community-driven plugin
+directory language and `claude-plugins-official` marketplace language. The
+provider receipt and resulting catalog entry are authoritative for the actual
+publication destination. Verify the listing there and, when the receipt names a
+Claude Code marketplace, perform a fresh install from that exact marketplace.
+
 ## Receipt ledger
 
 | State | Required evidence |
@@ -131,5 +140,5 @@ not itself evidence of a published directory update.
 | Submitted | Provider receipt or submission ID with timestamp |
 | Review pending | Provider status page or email receipt |
 | Approved | Provider approval notice |
-| Published | Fresh install from `claude-plugins-official` |
+| Published | Receipt and catalog entry; marketplace install when applicable |
 | Anthropic Verified | Badge visible in the provider directory |

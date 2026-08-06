@@ -17,6 +17,10 @@
 - `plugin.manifest.json` lists exactly seven focused profile tools and does not list
   `orgx_bootstrap`
 - `commands/` contains only user-invoked, OrgX-specific status/setup workflows
+- installed commands resolve under Claude Code's plugin namespace:
+  `/orgx-claude-code-plugin:orgx-login`,
+  `/orgx-claude-code-plugin:orgx-status`, and
+  `/orgx-claude-code-plugin:orgx-operator-chronicle`
 - `skills/` contains only static, human-readable setup guidance
 - no automatic hook configuration is present
 - no subagent profile is present
@@ -113,5 +117,8 @@ smoke before claiming wizard compatibility.
 - submit through one official portal only
 - retain submission, review, approval, publication, and verification receipts
   separately
-- prove publication with a fresh install from
-  `orgx-claude-code-plugin@claude-plugins-official`
+- treat the provider receipt and resulting catalog entry as authoritative for
+  the publication destination; Anthropic documentation uses both general
+  plugin-directory and `claude-plugins-official` marketplace language
+- when Anthropic names a Claude Code marketplace, prove publication with a
+  fresh install of `orgx-claude-code-plugin` from that exact marketplace

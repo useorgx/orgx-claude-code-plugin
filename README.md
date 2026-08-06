@@ -7,8 +7,10 @@ OAuth flow.
 The plugin surface is intentionally small:
 
 - one remote HTTPS MCP connection
-- three user-invoked commands: `/orgx-login`, `/orgx-status`, and
-  `/orgx-operator-chronicle`
+- three user-invoked commands:
+  `/orgx-claude-code-plugin:orgx-login`,
+  `/orgx-claude-code-plugin:orgx-status`, and
+  `/orgx-claude-code-plugin:orgx-operator-chronicle`
 - one static setup skill for connection troubleshooting
 
 The installed plugin has no automatic lifecycle hooks, background process,
@@ -24,9 +26,13 @@ claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin
 claude plugin install orgx-claude-code-plugin@orgx --scope user
 ```
 
-The official `claude-plugins-official` listing is a separate distribution state.
-Until Anthropic confirms publication, the HTTPS marketplace above is the public
-self-serve installation path.
+Anthropic directory publication is a separate distribution state. Anthropic's
+documentation describes both a general, community-driven plugin directory and
+the `claude-plugins-official` Claude Code marketplace. Treat the provider
+submission receipt and resulting catalog entry as authoritative for the actual
+publication destination, then verify a fresh install from the marketplace named
+there. Until Anthropic confirms publication, the HTTPS marketplace above is the
+public self-serve installation path.
 
 The OrgX wizard is another installation path and requires its own release
 receipt. A compatible wizard build must copy root `.mcp.json` and tolerate the
@@ -67,10 +73,15 @@ metering. The installed plugin adds no local telemetry or background reporting.
 
 ## User-invoked workflows
 
-- `/orgx-login` explains the native OAuth connection flow.
-- `/orgx-status` calls `get_initiative_pulse` for a requested initiative.
-- `/orgx-operator-chronicle` calls `get_operator_chronicle` for the last 30
-  days.
+- `/orgx-claude-code-plugin:orgx-login` explains the native OAuth connection
+  flow.
+- `/orgx-claude-code-plugin:orgx-status` calls `get_initiative_pulse` for a
+  requested initiative.
+- `/orgx-claude-code-plugin:orgx-operator-chronicle` calls
+  `get_operator_chronicle` for the last 30 days.
+
+The source files keep their short names under `commands/`; Claude Code adds the
+plugin namespace to installed slash-command invocations.
 
 The commands do not run automatically and do not call unrelated software.
 
