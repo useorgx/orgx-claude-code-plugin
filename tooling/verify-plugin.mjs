@@ -109,9 +109,22 @@ if (Object.hasOwn(manifest, "mcpServers")) {
 const orgxServer = mcp.mcpServers?.orgx;
 if (!orgxServer || orgxServer.type !== "http") fail("missing HTTP orgx MCP server");
 assertSameMembers(Object.keys(mcp.mcpServers ?? {}), ["orgx"], "MCP server keys");
-const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=claude-directory";
+// The shipped URL keeps the audited directory profile as its default while
+// letting an operator opt a single install into a wider profile by exporting
+// ORGX_MCP_PROFILE. Claude Code expands ${VAR:-default} in .mcp.json url
+// fields, so this stays declarative: no hook, script, or executable ships.
+const defaultMcpProfile = "claude-directory";
+const expectedMcpUrl = `https://mcp.useorgx.com/mcp?profile=\${ORGX_MCP_PROFILE:-${defaultMcpProfile}}`;
 if (orgxServer.url !== expectedMcpUrl) {
   fail(`orgx MCP URL must be ${expectedMcpUrl}`);
+}
+// An unset ORGX_MCP_PROFILE must resolve to the reviewed directory profile.
+const resolvedDefaultUrl = orgxServer.url.replace(
+  /\$\{ORGX_MCP_PROFILE:-([^}]+)\}/u,
+  "$1"
+);
+if (resolvedDefaultUrl !== `https://mcp.useorgx.com/mcp?profile=${defaultMcpProfile}`) {
+  fail(`orgx MCP URL must default to the ${defaultMcpProfile} profile`);
 }
 assertSameMembers(Object.keys(orgxServer), ["type", "url"], "orgx MCP fields");
 

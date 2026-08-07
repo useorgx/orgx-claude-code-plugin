@@ -110,6 +110,24 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
   }
 });
 
+test("bundled MCP url defaults to the reviewed directory profile", () => {
+  const mcpConfig = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
+  const url = mcpConfig.mcpServers.orgx.url;
+
+  // The opt-in must be a declarative env expansion, never shipped code.
+  assert.match(url, /^https:\/\/mcp\.useorgx\.com\/mcp\?profile=\$\{ORGX_MCP_PROFILE:-[a-z-]+\}$/u);
+
+  // An operator who sets nothing must land on the audited profile.
+  const resolvedDefault = url.replace(/\$\{ORGX_MCP_PROFILE:-([^}]+)\}/u, "$1");
+  assert.equal(
+    resolvedDefault,
+    "https://mcp.useorgx.com/mcp?profile=claude-directory"
+  );
+
+  // A wider profile must never be hardcoded as the shipped default.
+  assert.doesNotMatch(url, /profile=claude-plugin/u);
+});
+
 test("public catalog contains exactly seven focused profile tools", () => {
   const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
   assert.deepEqual([...manifest.mcp_tools].sort(), [

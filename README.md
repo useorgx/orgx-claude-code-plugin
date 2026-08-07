@@ -71,6 +71,26 @@ The profile does not expose business-data deletion or state-transition tools.
 Standard OrgX MCP usage may be recorded by the hosted service for operation and
 metering. The installed plugin adds no local telemetry or background reporting.
 
+### Opting a single install into a wider profile
+
+The shipped default above is what every install gets. An operator who wants the
+plugin to record their own work can point one install at a wider OrgX profile by
+exporting `ORGX_MCP_PROFILE` before launching Claude Code:
+
+```bash
+export ORGX_MCP_PROFILE=claude-plugin
+```
+
+Claude Code expands `${ORGX_MCP_PROFILE:-claude-directory}` in the bundled
+`.mcp.json`, so this is a per-machine environment choice, not a code path: the
+plugin still ships no hook, script, or executable. Unset the variable to return
+to the default profile.
+
+The `claude-plugin` profile is the seven tools above plus `orgx_emit_activity`,
+`orgx_submit_receipt`, `orgx_attach`, `orgx_decide`, and `orgx_bootstrap`. Those
+write to the operator's own OrgX workspace, so opting in is a deliberate,
+reversible act by the person who owns that workspace.
+
 ## User-invoked workflows
 
 - `/orgx-claude-code-plugin:orgx-login` explains the native OAuth connection

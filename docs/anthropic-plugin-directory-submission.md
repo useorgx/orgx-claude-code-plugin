@@ -23,7 +23,12 @@ separate evidence.
 
 The plugin contains a remote HTTPS MCP configuration, three user-invoked
 commands, and one static setup skill. It loads no automatic hooks or local
-executables. It does not fetch skill or agent instructions from OrgX. It does
+executables. The bundled MCP url is
+`https://mcp.useorgx.com/mcp?profile=${ORGX_MCP_PROFILE:-claude-directory}`: an
+unset variable resolves to the reviewed `claude-directory` profile, and an
+operator may export `ORGX_MCP_PROFILE` to point their own install at a wider
+OrgX profile that writes to their own workspace. That expansion is Claude
+Code's documented `.mcp.json` behavior, so the opt-in adds no shipped code. It does not fetch skill or agent instructions from OrgX. It does
 not read Claude memory, session history, summaries, or user files. The MCP
 server receives only the inputs needed for an OrgX action the user requests.
 The fixed seven-tool profile exposes no destructive business action. Standard
