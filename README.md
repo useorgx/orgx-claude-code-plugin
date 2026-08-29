@@ -85,6 +85,25 @@ plugin namespace to installed slash-command invocations.
 
 The commands do not run automatically and do not call unrelated software.
 
+## Session security boundary
+
+The public plugin is stateless. Each status command uses only its current MCP
+response and never treats an earlier command result as continuing authority. An
+expired, invalid, or missing authorization response fails closed and returns the
+user to Claude Code's native OAuth flow.
+
+The plugin does not read or transmit the current working directory, repository
+path, or path aliases, so no CWD alias can inherit organizational authority. It
+creates no local state file or plugin-owned lease. Consequently there is no
+local lease TTL to refresh and no customer-repository state path to protect.
+Native OAuth and the hosted MCP service own authorization expiry.
+
+`plugin.manifest.json` records this boundary as a machine-checked contract. If a
+future directory-policy-approved runtime introduces local state, the contract
+requires project-relative storage to remain forbidden and private files to use
+mode `0600`; that future runtime would require a separate implementation and
+review before the manifest could change.
+
 ## Data and support
 
 - Privacy: https://useorgx.com/privacy

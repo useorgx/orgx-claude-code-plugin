@@ -29,6 +29,12 @@
 - no MCP header, token, API key, password, cookie, or OAuth code is embedded
 - standard hosted OrgX MCP usage may be recorded, but the installed plugin adds
   no local telemetry or background reporting
+- `plugin.manifest.json` keeps the exact stateless session-security contract:
+  current-response-only authority, no CWD access or aliases, no local state,
+  remote expiry enforcement, and mode `0600` required if local state is ever
+  introduced through a separately reviewed architecture change
+- both status commands reject expired authorization and prohibit reuse of an
+  earlier command result as current authority
 
 ## Deterministic gates
 

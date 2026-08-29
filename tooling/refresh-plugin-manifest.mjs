@@ -13,6 +13,7 @@ export function fingerprintPayload(manifest) {
     capabilities: [...(manifest.capabilities ?? [])].sort(),
     mcp_tools: [...(manifest.mcp_tools ?? [])].sort(),
     driver_ids: [...(manifest.driver_ids ?? [])].sort(),
+    session_security: manifest.session_security,
   };
 }
 

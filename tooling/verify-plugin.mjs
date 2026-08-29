@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 import { expectedManifestFingerprint } from "./refresh-plugin-manifest.mjs";
+import { assertSessionSecurityContract } from "./session-security-contract.mjs";
 
 function fail(message) {
   console.error(`verify-plugin: ${message}`);
@@ -190,9 +191,7 @@ for (const path of loadedFiles) {
   }
 }
 
-const commandFiles = listFiles(resolve(root, "commands")).filter(
-  (path) => extname(path) === ".md"
-);
+const commandFiles = listFiles(resolve(root, "commands"));
 assertSameMembers(
   commandFiles.map((path) => relative(resolve(root, "commands"), path)),
   ["orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"],
@@ -214,9 +213,7 @@ for (const [commandFile, toolName] of commandToolContracts) {
   }
 }
 
-const skillFiles = listFiles(resolve(root, "skills")).filter(
-  (path) => extname(path) === ".md"
-);
+const skillFiles = listFiles(resolve(root, "skills"));
 assertSameMembers(
   skillFiles.map((path) => relative(resolve(root, "skills"), path)),
   ["orgx-setup/SKILL.md"],
@@ -252,6 +249,19 @@ for (const toolName of commandToolContracts.values()) {
   if (!releaseManifest.mcp_tools.includes(toolName)) {
     fail(`command tool is missing from directory MCP tool catalog: ${toolName}`);
   }
+}
+
+try {
+  assertSessionSecurityContract({
+    manifestSecurity: releaseManifest.session_security,
+    statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+    chronicleCommand: readFileSync(
+      resolve(root, "commands", "orgx-operator-chronicle.md"),
+      "utf8"
+    ),
+  });
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
 }
 
 const readme = readFileSync(resolve(root, "README.md"), "utf8");

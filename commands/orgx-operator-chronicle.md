@@ -15,6 +15,12 @@ Lead with `reportingNarrative.briefMarkdown`, then call out:
 - data gaps
 - the first recommended action
 
+Use only the result returned by this command's current MCP call. Do not reuse an
+earlier command result as current organizational authority. If the current call
+reports expired, invalid, or missing authorization, stop and require native
+OAuth reauthentication. Do not read, derive, transmit, or use a
+working-directory or project-path alias as authority.
+
 Be explicit when goals are provisional signals rather than accepted OrgX goals.
 If the MCP call fails, report the exact connection or tool error and direct the
 user to `/orgx-login`; do not fabricate a briefing.
