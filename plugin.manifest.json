@@ -1,7 +1,7 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
   "version": "0.1.12",
-  "manifest_fingerprint": "sha256:2fb087d3a45bd2c79c6507930c92cf5dff328e1f7007b24deb9602aa28854337",
+  "manifest_fingerprint": "sha256:6e1c10370728ed46dbe801001c66e3ed48ed29c4e5033a19ab8ba2483df7db2a",
   "capabilities": [
     "commands:user-invoked",
     "mcp:remote-oauth",
@@ -19,5 +19,28 @@
   "driver_ids": [
     "claude_code"
   ],
+  "session_security": {
+    "schema_version": "orgx-claude-session-security/v1",
+    "enforcement_model": "stateless_remote_call",
+    "authority": {
+      "source": "current_mcp_response",
+      "cache": "forbidden",
+      "stale_response": "reject"
+    },
+    "cwd": {
+      "access": "none",
+      "aliases": "not_applicable"
+    },
+    "local_state": {
+      "storage": "none",
+      "project_paths": "forbidden",
+      "private_file_mode_if_introduced": "0600"
+    },
+    "lease": {
+      "owner": "hosted_mcp_and_native_oauth",
+      "local_ttl": "none",
+      "expired": "reject_and_reauthenticate"
+    }
+  },
   "notes": "The public plugin loads only static guidance, user-invoked commands, and a focused, non-destructive, closed-world seven-tool OrgX MCP status profile. Standard hosted OrgX MCP usage may be recorded. It has no automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
 }

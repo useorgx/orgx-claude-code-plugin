@@ -5,6 +5,11 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import {
+  EXPECTED_SESSION_SECURITY,
+  assertSessionSecurityContract,
+} from "../tooling/session-security-contract.mjs";
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 function run(command, args) {
@@ -88,6 +93,17 @@ test("loaded instructions contain no automatic, dynamic, or session-data path", 
   }
 });
 
+test("loaded command and skill roots contain no hidden state or lease file", () => {
+  assert.deepEqual(
+    walk(resolve(root, "commands")).map((path) => relative(resolve(root, "commands"), path)),
+    ["orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"]
+  );
+  assert.deepEqual(
+    walk(resolve(root, "skills")).map((path) => relative(resolve(root, "skills"), path)),
+    ["orgx-setup/SKILL.md"]
+  );
+});
+
 test("commands use Claude plugin-scoped bundled MCP tool names", () => {
   const pluginManifest = JSON.parse(
     readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
@@ -122,6 +138,107 @@ test("public catalog contains exactly seven focused profile tools", () => {
     "orgx_search",
   ]);
   assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
+});
+
+test("stateless session security contract rejects stale authority and ambient path scope", () => {
+  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
+  const statusCommand = readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8");
+  const chronicleCommand = readFileSync(
+    resolve(root, "commands", "orgx-operator-chronicle.md"),
+    "utf8"
+  );
+
+  assert.doesNotThrow(() =>
+    assertSessionSecurityContract({
+      manifestSecurity: manifest.session_security,
+      statusCommand,
+      chronicleCommand,
+    })
+  );
+  assert.deepEqual(manifest.session_security, EXPECTED_SESSION_SECURITY);
+});
+
+test("session security contract rejects a missing fresh-response guard", () => {
+  assert.throws(
+    () =>
+      assertSessionSecurityContract({
+        manifestSecurity: EXPECTED_SESSION_SECURITY,
+        statusCommand: "Call the status tool once.",
+        chronicleCommand: readFileSync(
+          resolve(root, "commands", "orgx-operator-chronicle.md"),
+          "utf8"
+        ),
+      }),
+    /orgx-status\.md is missing session security contract/u
+  );
+});
+
+test("session security contract rejects CWD alias authority", () => {
+  const unsafe = structuredClone(EXPECTED_SESSION_SECURITY);
+  unsafe.cwd = { access: "project", aliases: "normalize" };
+  assert.throws(
+    () =>
+      assertSessionSecurityContract({
+        manifestSecurity: unsafe,
+        statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+        chronicleCommand: readFileSync(
+          resolve(root, "commands", "orgx-operator-chronicle.md"),
+          "utf8"
+        ),
+      }),
+    /session_security must equal/u
+  );
+});
+
+test("session security contract rejects project-local state or a weaker file mode", () => {
+  for (const localState of [
+    {
+      storage: "project_file",
+      project_paths: "allowed",
+      private_file_mode_if_introduced: "0600",
+    },
+    {
+      storage: "none",
+      project_paths: "forbidden",
+      private_file_mode_if_introduced: "0644",
+    },
+  ]) {
+    const unsafe = structuredClone(EXPECTED_SESSION_SECURITY);
+    unsafe.local_state = localState;
+    assert.throws(
+      () =>
+        assertSessionSecurityContract({
+          manifestSecurity: unsafe,
+          statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+          chronicleCommand: readFileSync(
+            resolve(root, "commands", "orgx-operator-chronicle.md"),
+            "utf8"
+          ),
+        }),
+      /session_security must equal/u
+    );
+  }
+});
+
+test("session security contract rejects plugin-owned TTL or stale-expiry reuse", () => {
+  const unsafe = structuredClone(EXPECTED_SESSION_SECURITY);
+  unsafe.lease = {
+    owner: "plugin",
+    local_ttl: "300s",
+    expired: "reuse_until_refresh",
+  };
+  assert.throws(
+    () =>
+      assertSessionSecurityContract({
+        manifestSecurity: unsafe,
+        statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+        chronicleCommand: readFileSync(
+          resolve(root, "commands", "orgx-operator-chronicle.md"),
+          "utf8"
+        ),
+      }),
+    /session_security must equal/u
+  );
 });
 
 test("public copy uses the audited non-destructive profile boundary", () => {
