@@ -1,6 +1,6 @@
 {
   "name": "@useorgx/claude-code-plugin",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
   "type": "module",
   "private": false,

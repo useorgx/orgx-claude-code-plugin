@@ -1,10 +1,10 @@
 {
   "name": "orgx",
   "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "metadata": {
     "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
-    "version": "0.1.12"
+    "version": "0.1.13"
   },
   "owner": {
     "name": "OrgX Team",
@@ -16,7 +16,7 @@
       "displayName": "OrgX",
       "description": "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.",
       "source": "./",
-      "version": "0.1.12",
+      "version": "0.1.13",
       "author": {
         "name": "OrgX Team",
         "email": "reviewers@useorgx.com"
