@@ -10,7 +10,7 @@ separate evidence.
 
 - Name: `OrgX`
 - Plugin ID: `orgx-claude-code-plugin`
-- Version: `0.1.12`
+- Version: `0.1.13`
 - Category: `productivity`
 - Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
 - Homepage: `https://useorgx.com`
