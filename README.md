@@ -104,6 +104,78 @@ requires project-relative storage to remain forbidden and private files to use
 mode `0600`; that future runtime would require a separate implementation and
 review before the manifest could change.
 
+## OrgX Live (optional mod)
+
+`orgx-live` is a second, separate plugin in the same marketplace, under
+`plugins/orgx-live/`. It is a Claude Code mod (a plugin of function hooks), so
+it adds hooks and sends activity to OrgX when you turn capture on. It is not
+part of the OrgX plugin above, its npm package, or its directory submission,
+and installing it changes nothing about that plugin.
+
+```bash
+claude plugin marketplace add https://github.com/useorgx/orgx-claude-code-plugin.git --scope user
+claude plugin install orgx-live@orgx --scope user
+```
+
+It needs a Claude Code build that loads mods. It ships its own MCP connection,
+`https://mcp.useorgx.com/mcp?profile=claude-plugin`, listed in `/mcp` under the
+`orgx-live` plugin; authenticate it there once. That profile also gives Claude
+the OrgX tools it lists (activity, receipts, decisions, bootstrap).
+
+What it does:
+
+- Status line: `OrgX · N need you`, from `orgx_decide` with
+  `action: "list_pending"`, checked at session start and every five minutes.
+  Nothing shows when nothing needs you. One quiet note replaces it if OrgX
+  cannot be reached or asks you to sign in.
+- `/orgx-needs-you` opens a pane listing those decisions (question, urgency,
+  age, OrgX's recommendation when there is one) with **Open in OrgX** for each,
+  plus the last few captured turns. You decide in OrgX: the mod never
+  approves, rejects or settles a decision.
+- Capture, off by default. With `capture: summary`, each turn that used tools
+  sends one `orgx_emit_activity` a couple of seconds after the turn ends. Tool
+  calls are never delayed, and an OrgX failure is counted, never raised.
+
+A captured turn sends counts only:
+
+```json
+{
+  "initiative_id": "2f1c9a7e-4b7d-4c1e-9a55-0d3e8b6f1a20",
+  "correlation_id": "claude-code:a8ca17f0-9de1-4d88-bf39-14087192859b",
+  "source_client": "claude-code",
+  "phase": "execution",
+  "level": "warn",
+  "message": "Claude Code turn 1: 7 tool calls (Bash 2, Edit 2, Read 1, Write 1, mcp 1), 2 files changed, 1 failed, 48s",
+  "metadata": {
+    "schema": "orgx-live.turn-summary.v1",
+    "capture": "summary",
+    "turn": 1,
+    "tool_calls": 7,
+    "tools": { "Read": 1, "Edit": 2, "Write": 1, "Bash": 2, "mcp": 1 },
+    "failed_tool_calls": 1,
+    "files_changed": 2,
+    "subagent_tool_calls": 0,
+    "duration_ms": 48200,
+    "outcome": "answer"
+  },
+  "runtime": { "source_runtime": "anthropic", "source_system": "claude-code", "adapter": "orgx-live-mod" }
+}
+```
+
+It never sends file paths or contents, prompts, answers, commands or their
+output, environment values, or MCP server names (every MCP tool counts as
+`mcp`). The correlation id is random per session. Summaries go to the
+initiative in the mod's `initiative` setting, else the one `orgx_bootstrap`
+bound in the session; with neither, the turn is skipped and the pane says why.
+
+To turn capture off, open `/config`, find `orgx-live`, and set `capture` to
+`off`; the mod reloads without its tool and turn hooks. To remove the mod
+entirely, run `claude plugin uninstall orgx-live@orgx`.
+
+Developing it needs the `claude` CLI: `npm run mod:validate`, `npm run
+mod:test` and `npm run mod:typecheck` (see `tooling/orgx-live/typecheck.mjs`
+for where the API declarations come from).
+
 ## Data and support
 
 - Privacy: https://useorgx.com/privacy

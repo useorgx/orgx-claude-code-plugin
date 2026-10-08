@@ -38,6 +38,35 @@
         "initiative-status",
         "operator-briefing"
       ]
+    },
+    {
+      "name": "orgx-live",
+      "displayName": "OrgX Live (optional mod)",
+      "description": "Optional mod, separate from the OrgX plugin: adds function hooks that show OrgX decisions waiting on you in the status line and a pane. When you turn capture on, it sends OrgX one counts-only activity summary per turn; capture is off by default.",
+      "source": "./plugins/orgx-live",
+      "version": "0.1.0",
+      "author": {
+        "name": "OrgX Team",
+        "email": "reviewers@useorgx.com"
+      },
+      "homepage": "https://useorgx.com",
+      "repository": "https://github.com/useorgx/orgx-claude-code-plugin",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "orgx",
+        "mcp",
+        "mod",
+        "hooks",
+        "status-line",
+        "activity"
+      ],
+      "tags": [
+        "mod",
+        "hooks",
+        "sends-activity",
+        "decisions"
+      ]
     }
   ]
 }

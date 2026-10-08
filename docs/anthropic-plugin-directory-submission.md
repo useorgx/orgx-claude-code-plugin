@@ -30,6 +30,12 @@ The fixed seven-tool profile exposes no destructive business action. Standard
 OrgX MCP usage may be recorded by the hosted service for operation and metering;
 the plugin itself adds no local telemetry or background reporting.
 
+The repository's self-hosted marketplace also lists `orgx-live`, an optional
+mod under `plugins/orgx-live/` that adds function hooks and its own MCP
+connection. It is a separate plugin with its own install command. It is not
+part of this submission, the `orgx-claude-code-plugin` manifest, or the npm
+artifact, and none of the checks below cover it.
+
 ## Policy mapping
 
 The package was narrowed for the Anthropic Software Directory Policy dated
