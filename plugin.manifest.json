@@ -1,7 +1,7 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
-  "version": "0.1.13",
-  "manifest_fingerprint": "sha256:ce9716cbca0b3cd49c151542f7382f873c0a4ee9b221819153327e600aef7946",
+  "version": "0.1.14",
+  "manifest_fingerprint": "sha256:597dc58889434d229f47d01477462cfd72e624de95c76d22b6f95c4a85dbe76d",
   "capabilities": [
     "commands:user-invoked",
     "mcp:remote-oauth",
