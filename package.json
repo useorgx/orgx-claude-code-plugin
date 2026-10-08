@@ -33,7 +33,7 @@
     "dev:claude": "claude --plugin-dir ."
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.6.4",
     "typescript": "^5.9.0"
   },
   "engines": {
