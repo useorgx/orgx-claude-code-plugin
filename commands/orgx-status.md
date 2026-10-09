@@ -3,7 +3,9 @@ description: Get an OrgX initiative pulse after the user requests a status snaps
 allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_get_initiative_progress
 ---
 
-If the user did not name an initiative, ask which one to inspect. Then call
+Use the initiative UUID supplied by the user or identified in the current
+authorized context. If only a title is known, ask for its OrgX initiative link
+or UUID; do not send the title as an ID or call an unlisted lookup tool. Then call
 `orgx_get_initiative_progress` once with its required `initiative_id` and summarize:
 
 - initiative progress
