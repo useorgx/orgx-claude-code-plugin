@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { expectedManifestFingerprint } from "../tooling/refresh-plugin-manifest.mjs";
 
 import {
   EXPECTED_SESSION_SECURITY,
@@ -114,8 +115,8 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
 
   const toolPrefix = `mcp__plugin_${pluginManifest.name}_${serverKeys[0]}__`;
   for (const [commandFile, toolName] of [
-    ["orgx-status.md", "get_initiative_pulse"],
-    ["orgx-operator-chronicle.md", "get_operator_chronicle"],
+    ["orgx-status.md", "orgx_get_initiative_progress"],
+    ["orgx-operator-chronicle.md", "orgx_get_operator_brief"],
   ]) {
     const text = readFileSync(resolve(root, "commands", commandFile), "utf8");
     assert.match(
@@ -129,15 +130,20 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
 test("public catalog contains exactly seven focused profile tools", () => {
   const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
   assert.deepEqual([...manifest.mcp_tools].sort(), [
-    "get_agent_status",
-    "get_initiative_pulse",
-    "get_morning_brief",
-    "get_operator_chronicle",
-    "orgx_inspect",
-    "orgx_recommend",
-    "orgx_search",
+    "orgx_get_agent_status", "orgx_get_initiative_progress", "orgx_get_next_actions",
+    "orgx_get_operation_status", "orgx_get_operator_brief", "orgx_inspect", "orgx_search",
   ]);
   assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
+});
+
+test("Claude commands bind the current seven-tool informational profile", () => {
+  const mcp = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
+  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
+  assert.equal(new URL(mcp.mcpServers.orgx.url).searchParams.get("profile"), "read-only");
+  assert.deepEqual(manifest.mcp_contract, { family: "operation-v1", profile: "read-only" });
+  const widened = structuredClone(manifest);
+  widened.mcp_contract.profile = "claude-directory";
+  assert.notEqual(expectedManifestFingerprint(widened), expectedManifestFingerprint(manifest));
 });
 
 test("stateless session security contract rejects stale authority and ambient path scope", () => {
@@ -266,7 +272,7 @@ test("public copy uses the audited non-destructive profile boundary", () => {
     "docs/anthropic-plugin-directory-submission.md",
     "docs/release-checklist.md",
   ].map((path) => readFileSync(resolve(root, path), "utf8"));
-  const overbroadAccessClaim = /read(?:-| )only|seven[^\n]*read tools|directory-safe read/iu;
+  const overbroadAccessClaim = /seven[^\n]*read tools|directory-safe read/iu;
   for (const text of publicCopy) {
     assert.doesNotMatch(text, overbroadAccessClaim);
   }

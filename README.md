@@ -54,31 +54,42 @@ file. Installation alone is not proof that OAuth succeeded.
 The plugin connects to:
 
 ```text
-https://mcp.useorgx.com/mcp?profile=claude-directory
+https://mcp.useorgx.com/mcp?profile=read-only
 ```
 
 That closed-world profile exposes exactly seven OrgX tools:
 
 - `orgx_search`
 - `orgx_inspect`
-- `orgx_recommend`
-- `get_agent_status`
-- `get_initiative_pulse`
-- `get_morning_brief`
-- `get_operator_chronicle`
+- `orgx_get_next_actions`
+- `orgx_get_agent_status`
+- `orgx_get_initiative_progress`
+- `orgx_get_operation_status`
+- `orgx_get_operator_brief`
 
 The profile does not expose business-data deletion or state-transition tools.
 Standard OrgX MCP usage may be recorded by the hosted service for operation and
 metering. The installed plugin adds no local telemetry or background reporting.
 
+The `read-only` selector uses seven current named informational operations.
+The public command names remain the same, and their bundled MCP names and
+inputs now match this catalog. The release manifest binds that profile into
+its fingerprint. The broader directory and runtime profiles are separate.
+
+After updating an older installation, refresh its MCP connection and verify the
+seven authenticated tools above. If the profile is unavailable, stop the OrgX
+command and report the connection mismatch. Do not select a broader profile or
+guess a replacement tool. Profile changes require server deployment before a
+client release; local source updates are not evidence of publication.
+
 ## User-invoked workflows
 
 - `/orgx-claude-code-plugin:orgx-login` explains the native OAuth connection
   flow.
-- `/orgx-claude-code-plugin:orgx-status` calls `get_initiative_pulse` for a
+- `/orgx-claude-code-plugin:orgx-status` calls `orgx_get_initiative_progress` for a
   requested initiative.
 - `/orgx-claude-code-plugin:orgx-operator-chronicle` calls
-  `get_operator_chronicle` for the last 30 days.
+  `orgx_get_operator_brief` for the last 30 days.
 
 The source files keep their short names under `commands/`; Claude Code adds the
 plugin namespace to installed slash-command invocations.

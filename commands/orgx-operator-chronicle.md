@@ -1,12 +1,13 @@
 ---
 description: Get the OrgX operator chronicle for decisions, proof, goals, initiatives, gaps, and priorities.
-allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_operator_chronicle
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_get_operator_brief
 ---
 
-Call `get_operator_chronicle` with `period: "30d"` after the user invokes this
+Call `orgx_get_operator_brief` with `period: "30d"` after the user invokes this
 command. Do not call other external tools unless the user separately asks.
 
-Lead with `reportingNarrative.briefMarkdown`, then call out:
+Read the returned `chronicle` object and lead with
+`chronicle.reportingNarrative.briefMarkdown`, then call out:
 
 - decision chronology for yesterday, the past week, and the past 30 days
 - artifact ledger

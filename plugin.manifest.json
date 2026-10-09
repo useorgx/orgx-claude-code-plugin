@@ -1,21 +1,25 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
   "version": "0.1.14",
-  "manifest_fingerprint": "sha256:597dc58889434d229f47d01477462cfd72e624de95c76d22b6f95c4a85dbe76d",
+  "manifest_fingerprint": "sha256:827467509cceb562451cb6d320e1715f218c3ad637b474d0bc272a5ec434cb66",
   "capabilities": [
     "commands:user-invoked",
     "mcp:remote-oauth",
     "skills:static"
   ],
   "mcp_tools": [
-    "get_agent_status",
-    "get_initiative_pulse",
-    "get_morning_brief",
-    "get_operator_chronicle",
+    "orgx_get_agent_status",
+    "orgx_get_initiative_progress",
+    "orgx_get_operation_status",
+    "orgx_get_operator_brief",
     "orgx_inspect",
-    "orgx_recommend",
+    "orgx_get_next_actions",
     "orgx_search"
   ],
+  "mcp_contract": {
+    "family": "operation-v1",
+    "profile": "read-only"
+  },
   "driver_ids": [
     "claude_code"
   ],

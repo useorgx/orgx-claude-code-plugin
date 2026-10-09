@@ -13,9 +13,13 @@
 ## Policy-safe installed surface
 
 - `.mcp.json` contains only the native-OAuth HTTPS endpoint
-  `https://mcp.useorgx.com/mcp?profile=claude-directory`
+  `https://mcp.useorgx.com/mcp?profile=read-only`
 - `plugin.manifest.json` lists exactly seven focused profile tools and does not list
   `orgx_bootstrap`
+- the release manifest fingerprint binds the seven current tools and
+  `mcp_contract` to `read-only`
+- deploy the matching server profile before releasing this client change; confirm
+  authenticated discovery exposes exactly seven tools, with no mutation callbacks
 - `commands/` contains only user-invoked, OrgX-specific status/setup workflows
 - installed commands resolve under Claude Code's plugin namespace:
   `/orgx-claude-code-plugin:orgx-login`,
@@ -107,7 +111,7 @@ ORGX_WIZARD_CONFIG_HOME="$wizard_smoke_root/wizard" \
 
 Then inspect the managed Claude plugin cache and prove:
 
-- `.mcp.json` exists and contains the `claude-directory` endpoint
+- `.mcp.json` exists and contains the `read-only` endpoint
 - only `.gitkeep` exists in `agents/`, `hooks/`, `lib/`, and `scripts/`
 - the three commands and one setup skill exist
 - no legacy installed file survives the sync

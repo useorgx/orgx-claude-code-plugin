@@ -1,9 +1,12 @@
 ---
 description: Get an OrgX initiative pulse after the user requests a status snapshot.
-allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__get_initiative_pulse
+allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_get_initiative_progress
 ---
 
-Call `get_initiative_pulse` once after the user invokes this command and summarize:
+Use the initiative UUID supplied by the user or identified in the current
+authorized context. If only a title is known, ask for its OrgX initiative link
+or UUID; do not send the title as an ID or call an unlisted lookup tool. Then call
+`orgx_get_initiative_progress` once with its required `initiative_id` and summarize:
 
 - initiative progress
 - active blockers
@@ -16,7 +19,6 @@ reports expired, invalid, or missing authorization, stop and require native
 OAuth reauthentication. Do not read, derive, transmit, or use a
 working-directory or project-path alias as authority.
 
-If the tool requires an initiative and the user did not name one, ask which
-initiative to inspect. If the MCP call fails, report the exact error and direct
+If the MCP call fails, report the exact error and direct
 the user to `/orgx-login`; do not infer live status from anything outside the
 returned MCP result.
