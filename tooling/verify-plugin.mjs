@@ -110,7 +110,7 @@ if (Object.hasOwn(manifest, "mcpServers")) {
 const orgxServer = mcp.mcpServers?.orgx;
 if (!orgxServer || orgxServer.type !== "http") fail("missing HTTP orgx MCP server");
 assertSameMembers(Object.keys(mcp.mcpServers ?? {}), ["orgx"], "MCP server keys");
-const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=claude-directory";
+const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=read-only";
 if (orgxServer.url !== expectedMcpUrl) {
   fail(`orgx MCP URL must be ${expectedMcpUrl}`);
 }
@@ -201,8 +201,8 @@ assertSameMembers(
 const serverKey = Object.keys(mcp.mcpServers)[0];
 const scopedToolPrefix = `mcp__plugin_${manifest.name}_${serverKey}__`;
 const commandToolContracts = new Map([
-  ["orgx-status.md", "get_initiative_pulse"],
-  ["orgx-operator-chronicle.md", "get_operator_chronicle"],
+  ["orgx-status.md", "orgx_get_initiative_progress"],
+  ["orgx-operator-chronicle.md", "orgx_get_operator_brief"],
 ]);
 for (const [commandFile, toolName] of commandToolContracts) {
   const commandText = readFileSync(resolve(root, "commands", commandFile), "utf8");
@@ -229,14 +229,18 @@ assertSameMembers(
   "release capabilities"
 );
 const expectedDirectoryTools = [
-  "get_agent_status",
-  "get_initiative_pulse",
-  "get_morning_brief",
-  "get_operator_chronicle",
+  "orgx_get_agent_status",
+  "orgx_get_initiative_progress",
+  "orgx_get_operation_status",
+  "orgx_get_operator_brief",
   "orgx_inspect",
-  "orgx_recommend",
+  "orgx_get_next_actions",
   "orgx_search",
 ];
+if (releaseManifest.mcp_contract?.profile !== "read-only" ||
+    releaseManifest.mcp_contract?.family !== "operation-v1") {
+  fail("release manifest must bind the current seven-tool informational profile");
+}
 assertSameMembers(
   releaseManifest.mcp_tools ?? [],
   expectedDirectoryTools,
@@ -292,7 +296,7 @@ const publicCopyPaths = [
   paths.submission,
   resolve(root, "docs", "release-checklist.md"),
 ];
-const overbroadAccessClaim = /read(?:-| )only|seven[^\n]*read tools|directory-safe read/iu;
+const overbroadAccessClaim = /seven[^\n]*read tools|directory-safe read/iu;
 for (const path of publicCopyPaths) {
   if (overbroadAccessClaim.test(readFileSync(path, "utf8"))) {
     fail(`overbroad access claim found in ${relative(root, path)}`);

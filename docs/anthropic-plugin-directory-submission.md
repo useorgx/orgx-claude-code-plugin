@@ -70,16 +70,16 @@ Official policy and submission documentation:
 6. Invoke `/orgx-claude-code-plugin:orgx-login` (or open `/mcp` directly),
    select `orgx`, and complete native OAuth.
 7. Confirm the endpoint is
-   `https://mcp.useorgx.com/mcp?profile=claude-directory` and the server is
+   `https://mcp.useorgx.com/mcp?profile=read-only` and the server is
    connected. Confirm it advertises exactly these seven profile tools:
 
    - `orgx_search`
    - `orgx_inspect`
-   - `orgx_recommend`
-   - `get_agent_status`
-   - `get_initiative_pulse`
-   - `get_morning_brief`
-   - `get_operator_chronicle`
+   - `orgx_get_next_actions`
+   - `orgx_get_agent_status`
+   - `orgx_get_initiative_progress`
+   - `orgx_get_operation_status`
+   - `orgx_get_operator_brief`
 
 8. Use the provider's secure reviewer-credential field for the populated test
    account. Never put reviewer credentials in this repository, a PR, an issue,
@@ -89,7 +89,7 @@ Official policy and submission documentation:
 
 1. Invoke `/orgx-claude-code-plugin:orgx-status`, select the seeded initiative
    if prompted, and verify that the response identifies progress and blockers
-   from `get_initiative_pulse`.
+   from `orgx_get_initiative_progress`.
 2. Invoke `/orgx-claude-code-plugin:orgx-operator-chronicle` and verify that the
    response separates decisions, artifacts, goals, initiatives, data gaps, and
    the first action.

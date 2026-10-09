@@ -12,6 +12,10 @@ Use only Claude Code's native OAuth connection flow:
    user to paste an access token into chat or into a checked-in file.
 2. Verify the MCP server is connected in `/mcp`. A visible server entry alone
    is not proof of authentication; confirm the connected/authenticated state.
+   This package requests `profile=read-only`, using its seven current
+   named status operations. A missing tool or profile mismatch requires a connection
+   refresh or a matching plugin/server update. Never switch to a broader profile
+   or invent a tool alias to make the command work.
 3. Retry only the OrgX action the user requested.
 
 The hosted profile is focused, closed-world, and non-destructive at the
