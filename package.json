@@ -30,7 +30,10 @@
     "prepublishOnly": "npm run check",
     "pack": "mkdir -p artifacts && npm pack --pack-destination artifacts",
     "release:dry-run": "node tooling/release-dry-run.mjs",
-    "dev:claude": "claude --plugin-dir ."
+    "dev:claude": "claude --plugin-dir .",
+    "mod:validate": "claude plugin validate plugins/orgx-live --strict",
+    "mod:test": "claude plugin test plugins/orgx-live",
+    "mod:typecheck": "node tooling/orgx-live/typecheck.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
