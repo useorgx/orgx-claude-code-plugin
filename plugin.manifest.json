@@ -1,6 +1,6 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "manifest_fingerprint": "sha256:827467509cceb562451cb6d320e1715f218c3ad637b474d0bc272a5ec434cb66",
   "capabilities": [
     "commands:user-invoked",
