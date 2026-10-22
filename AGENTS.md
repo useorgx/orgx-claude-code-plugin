@@ -50,25 +50,24 @@ and runs `npm run check`. No OrgX API secrets are required for static plugin
 verification.
 
 ## Strict Mode: Release Mode
-Release mode is required for any PR merge, tag/release, or production-impacting action.
+Release mode applies to tags/releases and production rollouts. Routine PR merges use checks appropriate to the diff and the repository's required CI.
 
 ### Release-mode Triggers
-- User asks to merge, tag, release, or ship.
+- User asks to tag, release, or deploy a production change.
 - User requests final verification sign-off.
 
 ### Release-mode Gates
-- Run `typecheck`.
+- Run `typecheck` when code or typed configuration changes.
 - Run relevant unit/integration tests for all touched domains.
-- Verify impacted UI flows on desktop and mobile (375px for mobile surfaces).
+- Verify impacted UI flows on desktop and mobile (375px for mobile surfaces), when UI behavior changes.
 - Provide a short verification summary in PR/release notes.
-- Do not merge/release while unknown failing checks remain unless user explicitly approves.
+- Investigate failing checks relevant to the change and satisfy required CI before merge/release. Report unrelated failures accurately; do not turn an unavailable optional local check into an automatic work stoppage.
 
 ## Decision and Approval Policy
 - Continue autonomously by default.
-- Ask user only for:
-  - destructive git/database actions
-  - production data changes
-  - ambiguous product decisions with no safe default
+- Existing user authorization persists through implementation, verification, PR updates, and requested merges/releases; do not ask again for an already authorized action.
+- Ask only for a consequential action outside that scope, such as an unapproved destructive git/database operation or production data change, or a material product decision with no safe default.
+- Missing OrgX context, reporting, or optional tooling does not block local repo work. Continue independent work while describing the actual limitation.
 
 ## Evidence Standard
 - Never claim “done” or “verified” without executed commands/checks.
@@ -87,7 +86,7 @@ Release mode is required for any PR merge, tag/release, or production-impacting 
 
 ## Safety
 - Never expose secrets/tokens in terminal output, code, or PR text.
-- Avoid irreversible operations without explicit confirmation.
+- Avoid irreversible operations without authorization; use explicit authorization already provided in the session.
 
 ## Reporting Format
 - Keep updates concise and evidence-based.
