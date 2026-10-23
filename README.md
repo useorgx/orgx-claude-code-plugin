@@ -1,16 +1,17 @@
 # OrgX for Claude Code
 
-OrgX is a public Claude Code plugin that connects Claude to a focused,
-non-destructive, closed-world OrgX status profile through Claude Code's native
-OAuth flow.
+OrgX connects Claude Code to current work and reviewable outputs through Claude
+Code's native OAuth flow. Status reads and explicit user-requested updates use
+the authenticated account's grants.
 
 The plugin surface is intentionally small:
 
 - one remote HTTPS MCP connection
-- three user-invoked commands:
+- four user-invoked commands:
   `/orgx-claude-code-plugin:orgx-login`,
-  `/orgx-claude-code-plugin:orgx-status`, and
-  `/orgx-claude-code-plugin:orgx-operator-chronicle`
+  `/orgx-claude-code-plugin:orgx-status`,
+  `/orgx-claude-code-plugin:orgx-operator-chronicle`, and
+  `/orgx-claude-code-plugin:orgx-attach-output`
 - one static setup skill for connection troubleshooting
 
 The installed plugin has no automatic lifecycle hooks, background process,
@@ -54,10 +55,10 @@ file. Installation alone is not proof that OAuth succeeded.
 The plugin connects to:
 
 ```text
-https://mcp.useorgx.com/mcp?profile=read-only
+https://mcp.useorgx.com/mcp?profile=claude-code
 ```
 
-That closed-world profile exposes exactly seven OrgX tools:
+That closed-world profile exposes exactly eight OrgX tools:
 
 - `orgx_search`
 - `orgx_inspect`
@@ -66,18 +67,24 @@ That closed-world profile exposes exactly seven OrgX tools:
 - `orgx_get_initiative_progress`
 - `orgx_get_operation_status`
 - `orgx_get_operator_brief`
+- `orgx_update_work`
 
-The profile does not expose business-data deletion or state-transition tools.
+The update operation accepts either a bounded content patch or one output
+attachment. It requires a stable retry key and the account's write grant.
+Attachment enters review; it does not approve or complete the work. The profile
+does not expose business-data deletion or workflow state-transition tools.
 Standard OrgX MCP usage may be recorded by the hosted service for operation and
 metering. The installed plugin adds no local telemetry or background reporting.
 
-The `read-only` selector uses seven current named informational operations.
-The public command names remain the same, and their bundled MCP names and
-inputs now match this catalog. The release manifest binds that profile into
-its fingerprint. The broader directory and runtime profiles are separate.
+The `claude-code` selector uses the seven named informational operations plus
+the existing `orgx_update_work` operation. The release manifest binds this exact
+profile into its fingerprint. Existing `read-only` clients retain their seven
+informational operations. Broader directory and runtime profiles are separate.
 
 After updating an older installation, refresh its MCP connection and verify the
-seven authenticated tools above. If the profile is unavailable, stop the OrgX
+eight authenticated tools above. A read-only OAuth grant can hide the write
+operation; the native consent flow must grant write access before attachment.
+If the profile is unavailable, stop the OrgX
 command and report the connection mismatch. Do not select a broader profile or
 guess a replacement tool. Profile changes require server deployment before a
 client release; local source updates are not evidence of publication.
@@ -90,6 +97,10 @@ client release; local source updates are not evidence of publication.
   requested initiative.
 - `/orgx-claude-code-plugin:orgx-operator-chronicle` calls
   `orgx_get_operator_brief` for the last 30 days.
+- `/orgx-claude-code-plugin:orgx-attach-output` inspects the requested target,
+  attaches one durable output through `orgx_update_work`, then inspects the
+  stored artifact. It presents the canonical answer, linked decisions, source
+  notes, context, files and receipt when OrgX has recorded them.
 
 The source files keep their short names under `commands/`; Claude Code adds the
 plugin namespace to installed slash-command invocations.
@@ -98,8 +109,8 @@ The commands do not run automatically and do not call unrelated software.
 
 ## Session security boundary
 
-The public plugin is stateless. Each status command uses only its current MCP
-response and never treats an earlier command result as continuing authority. An
+The public plugin is stateless. Each command uses its current MCP
+responses and never treats an earlier command result as continuing authority. An
 expired, invalid, or missing authorization response fails closed and returns the
 user to Claude Code's native OAuth flow.
 
@@ -108,6 +119,12 @@ path, or path aliases, so no CWD alias can inherit organizational authority. It
 creates no local state file or plugin-owned lease. Consequently there is no
 local lease TTL to refresh and no customer-repository state path to protect.
 Native OAuth and the hosted MCP service own authorization expiry.
+
+This version adds no automatic capture or local outbox. Wizard remains the
+owner of runtime capture. Retry an ambiguous attachment with its unchanged
+payload and key; source readiness does not prove hosted deployment, directory
+publication, or successful native OAuth. Deploy the matching app attachment
+route and MCP `claude-code` profile before distributing this version.
 
 `plugin.manifest.json` records this boundary as a machine-checked contract. If a
 future directory-policy-approved runtime introduces local state, the contract

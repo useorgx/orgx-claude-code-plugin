@@ -77,7 +77,7 @@ if (manifest.repository !== "https://github.com/useorgx/orgx-claude-code-plugin"
 if (manifest.license !== "MIT") fail("plugin license must be MIT");
 
 const expectedDescription =
-  "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.";
+  "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.";
 for (const [label, description] of [
   ["plugin manifest", manifest.description],
   ["marketplace", marketplace.description],
@@ -110,7 +110,7 @@ if (Object.hasOwn(manifest, "mcpServers")) {
 const orgxServer = mcp.mcpServers?.orgx;
 if (!orgxServer || orgxServer.type !== "http") fail("missing HTTP orgx MCP server");
 assertSameMembers(Object.keys(mcp.mcpServers ?? {}), ["orgx"], "MCP server keys");
-const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=read-only";
+const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=claude-code";
 if (orgxServer.url !== expectedMcpUrl) {
   fail(`orgx MCP URL must be ${expectedMcpUrl}`);
 }
@@ -194,7 +194,7 @@ for (const path of loadedFiles) {
 const commandFiles = listFiles(resolve(root, "commands"));
 assertSameMembers(
   commandFiles.map((path) => relative(resolve(root, "commands"), path)),
-  ["orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"],
+  ["orgx-attach-output.md", "orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"],
   "loaded commands"
 );
 
@@ -211,6 +211,12 @@ for (const [commandFile, toolName] of commandToolContracts) {
   if (allowedTools !== expectedTool) {
     fail(`${commandFile} allowed-tools must be ${expectedTool}, received ${String(allowedTools)}`);
   }
+}
+const attachCommand = readFileSync(resolve(root, 'commands', 'orgx-attach-output.md'), 'utf8');
+const attachTools = attachCommand.match(/^allowed-tools:\s*(.+)$/mu)?.[1]?.split(',').map((name) => name.trim());
+assertSameMembers(attachTools ?? [], [`${scopedToolPrefix}orgx_inspect`, `${scopedToolPrefix}orgx_update_work`], 'output command tools');
+for (const required of ['idempotency_key', 'output_front_door', 'Do not include `fields`', 'client acceptance and work completion pending']) {
+  if (!attachCommand.includes(required)) fail(`output command is missing ${required}`);
 }
 
 const skillFiles = listFiles(resolve(root, "skills"));
@@ -236,10 +242,11 @@ const expectedDirectoryTools = [
   "orgx_inspect",
   "orgx_get_next_actions",
   "orgx_search",
+  "orgx_update_work",
 ];
-if (releaseManifest.mcp_contract?.profile !== "read-only" ||
+if (releaseManifest.mcp_contract?.profile !== "claude-code" ||
     releaseManifest.mcp_contract?.family !== "operation-v1") {
-  fail("release manifest must bind the current seven-tool informational profile");
+  fail("release manifest must bind the current eight-operation profile");
 }
 assertSameMembers(
   releaseManifest.mcp_tools ?? [],
@@ -269,8 +276,8 @@ try {
 }
 
 const readme = readFileSync(resolve(root, "README.md"), "utf8");
-if (!readme.includes("closed-world profile exposes exactly seven OrgX tools")) {
-  fail("README must describe the exact seven-tool directory profile");
+if (!readme.includes("closed-world profile exposes exactly eight OrgX tools")) {
+  fail("README must describe the exact eight-operation client profile");
 }
 for (const toolName of expectedDirectoryTools) {
   if (!readme.includes(`- \`${toolName}\``)) {
