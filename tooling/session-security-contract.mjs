@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 
 export const EXPECTED_SESSION_SECURITY = Object.freeze({
-  schema_version: "orgx-claude-session-security/v1",
-  enforcement_model: "stateless_remote_call",
+  schema_version: "orgx-claude-session-security/v2",
+  enforcement_model: "fresh_remote_authority_with_explicit_retry_data",
   authority: Object.freeze({
     source: "current_mcp_response",
     cache: "forbidden",
@@ -13,9 +13,15 @@ export const EXPECTED_SESSION_SECURITY = Object.freeze({
     aliases: "not_applicable",
   }),
   local_state: Object.freeze({
-    storage: "none",
+    storage: "private_explicit_attachment_outbox",
     project_paths: "forbidden",
-    private_file_mode_if_introduced: "0600",
+    private_file_mode: "0600",
+    directory_mode: "0700",
+    credentials: "forbidden",
+    automatic_capture: "forbidden",
+    retry_scope: "same_session_explicit_requests_only",
+    max_entries: 20,
+    max_stop_attempts: 3,
   }),
   lease: Object.freeze({
     owner: "hosted_mcp_and_native_oauth",
@@ -42,7 +48,7 @@ export function assertSessionSecurityContract({
 }) {
   if (!isDeepStrictEqual(manifestSecurity, EXPECTED_SESSION_SECURITY)) {
     throw new Error(
-      `session_security must equal ${JSON.stringify(EXPECTED_SESSION_SECURITY)}`
+      `session_security must equal ${JSON.stringify(EXPECTED_SESSION_SECURITY)}`,
     );
   }
 
@@ -57,7 +63,9 @@ export function assertSessionSecurityContract({
       NO_CWD_AUTHORITY,
     ]) {
       if (!normalizedCommand.includes(normalizeWhitespace(required))) {
-        throw new Error(`${label} is missing session security contract: ${required}`);
+        throw new Error(
+          `${label} is missing session security contract: ${required}`,
+        );
       }
     }
   }

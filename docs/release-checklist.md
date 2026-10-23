@@ -2,6 +2,7 @@
 
 ## Source and identity
 
+- use version `0.1.17` for the explicit attachment outbox runtime change
 - confirm the branch and exact release diff
 - confirm `package.json`, `package-lock.json`, `.claude-plugin/plugin.json`,
   `.claude-plugin/marketplace.json`, and `plugin.manifest.json` use the same
@@ -29,19 +30,54 @@
   `/orgx-claude-code-plugin:orgx-operator-chronicle`, and
   `/orgx-claude-code-plugin:orgx-attach-output`
 - `skills/` contains only static, human-readable setup guidance
-- no automatic hook configuration is present
+- the only lifecycle hook is `Stop`, invoking the dependency-free
+  `scripts/attachment-outbox.mjs` helper with a bounded timeout
 - no subagent profile is present
-- no local executable, sidecar, dispatch, attention, telemetry, transcript,
-  skill-sync, or agent-sync runtime is packaged
+- packaged executable code is limited to that outbox helper; no sidecar,
+  dispatch, attention, telemetry, transcript, skill-sync or agent-sync runtime
+  is packaged
 - no MCP header, token, API key, password, cookie, or OAuth code is embedded
 - standard hosted OrgX MCP usage may be recorded, but the installed plugin adds
   no local telemetry or background reporting
-- `plugin.manifest.json` keeps the exact stateless session-security contract:
-  current-response-only authority, no CWD access or aliases, no local state,
-  remote expiry enforcement, and mode `0600` required if local state is ever
-  introduced through a separately reviewed architecture change
+- `plugin.manifest.json` matches the revised session-security contract:
+  current-response-only authority, no CWD access or aliases, remote expiry
+  enforcement, and explicit session-bound attachment request storage under
+  `~/.config/useorgx/claude-code/attachment-outbox`
+- the outbox directory is `0700`, files are `0600`, and project-relative state,
+  tokens and cached authorization are forbidden
 - both status commands reject expired authorization and prohibit reuse of an
   earlier command result as current authority
+
+## Attachment outbox checks
+
+- enqueue only the user's explicitly selected target and durable HTTPS output;
+  never discover files, scrape session text, or upload a local path
+- preserve the exact request and stable retry key after an ambiguous response
+- accept at most 20 entries, each at most 64 KiB
+- the hook consumes only `session_id` and `stop_hook_active`; ignore CWD,
+  transcript paths and assistant text
+- stop-hook reentry permits the session to stop, with no recursive retry loop
+- an unrelated session cannot automatically drain another session's requests
+- each attempt requires a current target/workspace inspection and the existing
+  native OAuth `orgx_update_work` call; the helper uses no direct HTTP or tokens
+- three failed attempts pause a request; age beyond seven days also pauses it
+- authentication, permission and validation failures pause; only an explicit
+  user retry command resumes a paused request
+- list and clear require an explicit command; clear changes only local state
+- test explicit `recover` as local repair only: refuse a live owner, release a
+  dead owner's lock, and restore valid uncommitted staging as paused with reason
+  `recovered` while preserving the exact payload and retry key
+- recovery discards incomplete staging and rejects unknown files; it makes no
+  MCP call and never requires forcing a live lock or deleting unrelated files
+- a recovered request remains paused until an explicit retry command
+- verify lock records contain only a PID and nonce, are prepared and fsynced
+  before atomic hard-link publication, and contain no credentials
+- user interrupts and API errors do not invoke `Stop`; leave pending requests
+  pending and make no delivery claim for those paths
+- report success only after the current MCP call returns a stored artifact UUID;
+  artifact review, client acceptance and work completion remain pending
+- record static protocol tests separately from actual native OAuth and live
+  attachment evidence; a passing local suite proves neither live boundary
 
 ## Deterministic gates
 
@@ -52,6 +88,11 @@ npm run manifest:check
 claude plugin validate . --strict
 npm pack --dry-run --json
 ```
+
+Record normal and strict CLI validation separately. With Claude Code 2.1.309,
+the strict validator reports pre-existing plugin-name and missing-icon warnings;
+do not record strict validation as passed. Retain the actual normal-validation
+result when run.
 
 Inspect the package list and confirm it matches the `package.json` allowlist.
 Then run a local load smoke:
@@ -101,9 +142,10 @@ scripts
 skills
 ```
 
-The last four runtime-capable directories are placeholder-only in this public
-plugin so a wizard refresh removes legacy installed files without getting a
-GitHub 404. Validate the released wizard in an isolated home directory:
+`hooks/` and `scripts/` now carry the bounded attachment outbox runtime;
+`agents/` and `lib/` retain compatibility placeholders. A wizard refresh must
+copy the exact new runtime while removing legacy installed files. Validate the
+released wizard in an isolated home directory:
 
 ```bash
 wizard_smoke_root="$(mktemp -d)"
@@ -116,7 +158,9 @@ ORGX_WIZARD_CONFIG_HOME="$wizard_smoke_root/wizard" \
 Then inspect the managed Claude plugin cache and prove:
 
 - `.mcp.json` exists and contains the `claude-code` endpoint
-- only `.gitkeep` exists in `agents/`, `hooks/`, `lib/`, and `scripts/`
+- only `.gitkeep` exists in `agents/` and `lib/`
+- the only configured lifecycle event is `Stop`
+- the hook points to the installed `scripts/attachment-outbox.mjs`
 - the four commands and one setup skill exist
 - no legacy installed file survives the sync
 
@@ -127,6 +171,8 @@ smoke before claiming wizard compatibility.
 ## Directory release
 
 - complete `docs/anthropic-plugin-directory-submission.md`
+- request a new review for 0.1.17's hook and private local outbox; do not inherit
+  approval or publication evidence from the earlier stateless package
 - merge reviewed source before submission
 - submit through one official portal only
 - retain submission, review, approval, publication, and verification receipts

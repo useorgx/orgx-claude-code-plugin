@@ -22,7 +22,7 @@ function run(command, args) {
   assert.equal(
     result.status,
     0,
-    `${command} ${args.join(" ")} failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`
+    `${command} ${args.join(" ")} failed\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
   );
   return result.stdout;
 }
@@ -41,8 +41,13 @@ test("directory verifier accepts the policy-safe public surface", () => {
   assert.match(output, /loaded skills: 1/u);
 });
 
-test("npm artifact contains no executable or automatic capability paths", () => {
-  const output = run("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"]);
+test("npm artifact includes only the declared bounded retry runtime", () => {
+  const output = run("npm", [
+    "pack",
+    "--dry-run",
+    "--json",
+    "--ignore-scripts",
+  ]);
   const report = JSON.parse(output);
   const files = report[0].files.map((entry) => entry.path).sort();
 
@@ -55,36 +60,74 @@ test("npm artifact contains no executable or automatic capability paths", () => 
     "commands/orgx-operator-chronicle.md",
     "commands/orgx-status.md",
     "skills/orgx-setup/SKILL.md",
+    "hooks/hooks.json",
+    "scripts/attachment-outbox.mjs",
   ]) {
     assert.ok(files.includes(expected), `packed artifact missing ${expected}`);
   }
 
   for (const path of files) {
+    if (["hooks/hooks.json", "scripts/attachment-outbox.mjs"].includes(path))
+      continue;
     assert.doesNotMatch(path, /^(?:agents|hooks|lib|scripts|tests|tooling)\//u);
     assert.doesNotMatch(path, /\.(?:js|mjs|cjs)$/u);
   }
 });
 
-test('output attachment is user-invoked, scoped, retryable and leaves rulings to OrgX', () => {
-  const text = readFileSync(resolve(root, 'commands/orgx-attach-output.md'), 'utf8');
-  assert.match(text, /allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_inspect, mcp__plugin_orgx-claude-code-plugin_orgx__orgx_update_work/u);
-  for (const guard of ['current MCP call', 'native OAuth reauthentication', 'project-path alias as authority', 'same retry key and exact payload', 'client acceptance and work completion pending'])
-    assert.ok(text.replace(/\s+/gu, ' ').includes(guard), guard);
-  assert.doesNotMatch(text, /orgx_attach|orgx_register_artifact|process\.stdin|transcript_path/u);
+test("output attachment is user-invoked, scoped, retryable and leaves rulings to OrgX", () => {
+  const text = readFileSync(
+    resolve(root, "commands/orgx-attach-output.md"),
+    "utf8",
+  );
+  assert.match(
+    text,
+    /allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_inspect, mcp__plugin_orgx-claude-code-plugin_orgx__orgx_update_work, Bash\(node/u,
+  );
+  for (const guard of [
+    "current MCP call",
+    "native OAuth reauthentication",
+    "project-path alias as authority",
+    "same retry key and exact payload",
+    "client acceptance and work completion pending",
+  ])
+    assert.ok(text.replace(/\s+/gu, " ").includes(guard), guard);
+  assert.doesNotMatch(
+    text,
+    /orgx_attach|orgx_register_artifact|process\.stdin|transcript_path/u,
+  );
 });
 
 test("GitHub tree remains compatible with the wizard's directory fetch", () => {
-  for (const directory of ["agents", "hooks", "lib", "scripts"]) {
+  for (const directory of ["agents", "lib"]) {
     const path = resolve(root, directory);
-    assert.equal(existsSync(path), true, `${directory} must exist for wizard sync`);
-    assert.deepEqual(walk(path).map((file) => relative(path, file)), [".gitkeep"]);
+    assert.equal(
+      existsSync(path),
+      true,
+      `${directory} must exist for wizard sync`,
+    );
+    assert.deepEqual(
+      walk(path).map((file) => relative(path, file)),
+      [".gitkeep"],
+    );
   }
+  assert.deepEqual(
+    walk(resolve(root, "hooks")).map((file) =>
+      relative(resolve(root, "hooks"), file),
+    ),
+    [".gitkeep", "hooks.json"],
+  );
+  assert.deepEqual(
+    walk(resolve(root, "scripts")).map((file) =>
+      relative(resolve(root, "scripts"), file),
+    ),
+    [".gitkeep", "attachment-outbox.mjs"],
+  );
   assert.equal(existsSync(resolve(root, ".mcp.json")), true);
 });
 
 test("loaded instructions contain no automatic, dynamic, or session-data path", () => {
   const loadedRoots = [".claude-plugin", "commands", "skills"].map((path) =>
-    resolve(root, path)
+    resolve(root, path),
   );
   const patterns = [
     /!`/u,
@@ -105,20 +148,31 @@ test("loaded instructions contain no automatic, dynamic, or session-data path", 
 
 test("loaded command and skill roots contain no hidden state or lease file", () => {
   assert.deepEqual(
-    walk(resolve(root, "commands")).map((path) => relative(resolve(root, "commands"), path)),
-    ["orgx-attach-output.md", "orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"]
+    walk(resolve(root, "commands")).map((path) =>
+      relative(resolve(root, "commands"), path),
+    ),
+    [
+      "orgx-attach-output.md",
+      "orgx-login.md",
+      "orgx-operator-chronicle.md",
+      "orgx-status.md",
+    ],
   );
   assert.deepEqual(
-    walk(resolve(root, "skills")).map((path) => relative(resolve(root, "skills"), path)),
-    ["orgx-setup/SKILL.md"]
+    walk(resolve(root, "skills")).map((path) =>
+      relative(resolve(root, "skills"), path),
+    ),
+    ["orgx-setup/SKILL.md"],
   );
 });
 
 test("commands use Claude plugin-scoped bundled MCP tool names", () => {
   const pluginManifest = JSON.parse(
-    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
+    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8"),
   );
-  const mcpConfig = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
+  const mcpConfig = JSON.parse(
+    readFileSync(resolve(root, ".mcp.json"), "utf8"),
+  );
   const serverKeys = Object.keys(mcpConfig.mcpServers ?? {});
   assert.deepEqual(serverKeys, ["orgx"]);
 
@@ -131,36 +185,60 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
     assert.match(
       text,
       new RegExp(`^allowed-tools: ${toolPrefix}${toolName}$`, "mu"),
-      commandFile
+      commandFile,
     );
   }
 });
 
 test("public catalog contains exactly eight focused profile tools", () => {
-  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
+  const manifest = JSON.parse(
+    readFileSync(resolve(root, "plugin.manifest.json"), "utf8"),
+  );
   assert.deepEqual([...manifest.mcp_tools].sort(), [
-    "orgx_get_agent_status", "orgx_get_initiative_progress", "orgx_get_next_actions",
-    "orgx_get_operation_status", "orgx_get_operator_brief", "orgx_inspect", "orgx_search", "orgx_update_work",
+    "orgx_get_agent_status",
+    "orgx_get_initiative_progress",
+    "orgx_get_next_actions",
+    "orgx_get_operation_status",
+    "orgx_get_operator_brief",
+    "orgx_inspect",
+    "orgx_search",
+    "orgx_update_work",
   ]);
   assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
 });
 
 test("Claude commands bind the current eight-operation profile", () => {
   const mcp = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
-  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
-  assert.equal(new URL(mcp.mcpServers.orgx.url).searchParams.get("profile"), "claude-code");
-  assert.deepEqual(manifest.mcp_contract, { family: "operation-v1", profile: "claude-code" });
+  const manifest = JSON.parse(
+    readFileSync(resolve(root, "plugin.manifest.json"), "utf8"),
+  );
+  assert.equal(
+    new URL(mcp.mcpServers.orgx.url).searchParams.get("profile"),
+    "claude-code",
+  );
+  assert.deepEqual(manifest.mcp_contract, {
+    family: "operation-v1",
+    profile: "claude-code",
+  });
   const widened = structuredClone(manifest);
   widened.mcp_contract.profile = "claude-directory";
-  assert.notEqual(expectedManifestFingerprint(widened), expectedManifestFingerprint(manifest));
+  assert.notEqual(
+    expectedManifestFingerprint(widened),
+    expectedManifestFingerprint(manifest),
+  );
 });
 
-test("stateless session security contract rejects stale authority and ambient path scope", () => {
-  const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
-  const statusCommand = readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8");
+test("retry-data security contract still rejects stale authority and ambient path scope", () => {
+  const manifest = JSON.parse(
+    readFileSync(resolve(root, "plugin.manifest.json"), "utf8"),
+  );
+  const statusCommand = readFileSync(
+    resolve(root, "commands", "orgx-status.md"),
+    "utf8",
+  );
   const chronicleCommand = readFileSync(
     resolve(root, "commands", "orgx-operator-chronicle.md"),
-    "utf8"
+    "utf8",
   );
 
   assert.doesNotThrow(() =>
@@ -168,7 +246,7 @@ test("stateless session security contract rejects stale authority and ambient pa
       manifestSecurity: manifest.session_security,
       statusCommand,
       chronicleCommand,
-    })
+    }),
   );
   assert.deepEqual(manifest.session_security, EXPECTED_SESSION_SECURITY);
 });
@@ -181,10 +259,10 @@ test("session security contract rejects a missing fresh-response guard", () => {
         statusCommand: "Call the status tool once.",
         chronicleCommand: readFileSync(
           resolve(root, "commands", "orgx-operator-chronicle.md"),
-          "utf8"
+          "utf8",
         ),
       }),
-    /orgx-status\.md is missing session security contract/u
+    /orgx-status\.md is missing session security contract/u,
   );
 });
 
@@ -195,13 +273,16 @@ test("session security contract rejects CWD alias authority", () => {
     () =>
       assertSessionSecurityContract({
         manifestSecurity: unsafe,
-        statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+        statusCommand: readFileSync(
+          resolve(root, "commands", "orgx-status.md"),
+          "utf8",
+        ),
         chronicleCommand: readFileSync(
           resolve(root, "commands", "orgx-operator-chronicle.md"),
-          "utf8"
+          "utf8",
         ),
       }),
-    /session_security must equal/u
+    /session_security must equal/u,
   );
 });
 
@@ -213,9 +294,9 @@ test("session security contract rejects project-local state or a weaker file mod
       private_file_mode_if_introduced: "0600",
     },
     {
-      storage: "none",
+      storage: "private_explicit_attachment_outbox",
       project_paths: "forbidden",
-      private_file_mode_if_introduced: "0644",
+      private_file_mode: "0644",
     },
   ]) {
     const unsafe = structuredClone(EXPECTED_SESSION_SECURITY);
@@ -224,13 +305,16 @@ test("session security contract rejects project-local state or a weaker file mod
       () =>
         assertSessionSecurityContract({
           manifestSecurity: unsafe,
-          statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+          statusCommand: readFileSync(
+            resolve(root, "commands", "orgx-status.md"),
+            "utf8",
+          ),
           chronicleCommand: readFileSync(
             resolve(root, "commands", "orgx-operator-chronicle.md"),
-            "utf8"
+            "utf8",
           ),
         }),
-      /session_security must equal/u
+      /session_security must equal/u,
     );
   }
 });
@@ -246,13 +330,16 @@ test("session security contract rejects plugin-owned TTL or stale-expiry reuse",
     () =>
       assertSessionSecurityContract({
         manifestSecurity: unsafe,
-        statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+        statusCommand: readFileSync(
+          resolve(root, "commands", "orgx-status.md"),
+          "utf8",
+        ),
         chronicleCommand: readFileSync(
           resolve(root, "commands", "orgx-operator-chronicle.md"),
-          "utf8"
+          "utf8",
         ),
       }),
-    /session_security must equal/u
+    /session_security must equal/u,
   );
 });
 
@@ -260,10 +347,10 @@ test("public copy uses the audited non-destructive profile boundary", () => {
   const expectedDescription =
     "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.";
   const pluginManifest = JSON.parse(
-    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
+    readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8"),
   );
   const marketplace = JSON.parse(
-    readFileSync(resolve(root, ".claude-plugin", "marketplace.json"), "utf8")
+    readFileSync(resolve(root, ".claude-plugin", "marketplace.json"), "utf8"),
   );
   const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
   assert.equal(pluginManifest.description, expectedDescription);
@@ -289,11 +376,15 @@ test("public copy uses the audited non-destructive profile boundary", () => {
 });
 
 test("submission runbook uses Anthropic's current plugin portals", () => {
-  const path = resolve(root, "docs", "anthropic-plugin-directory-submission.md");
+  const path = resolve(
+    root,
+    "docs",
+    "anthropic-plugin-directory-submission.md",
+  );
   const text = readFileSync(path, "utf8");
   assert.match(
     text,
-    /https:\/\/claude\.ai\/admin-settings\/directory\/submissions\/plugins\/new/u
+    /https:\/\/claude\.ai\/admin-settings\/directory\/submissions\/plugins\/new/u,
   );
   assert.match(text, /https:\/\/platform\.claude\.com\/plugins\/submit/u);
   assert.doesNotMatch(text, /claude\.ai\/settings\/plugins\/submit/u);

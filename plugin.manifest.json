@@ -1,11 +1,13 @@
 {
   "plugin_name": "@useorgx/claude-code-plugin",
-  "version": "0.1.16",
-  "manifest_fingerprint": "sha256:d333bdeb792416c8fe0a05fb888e8a8f8ae31d08ba6c192ca3d7f40c0468dfb8",
+  "version": "0.1.17",
+  "manifest_fingerprint": "sha256:51f3f67169068b6f78ca251daaa8a77a4de96b9a0927c101d70eb62e59ff4fe9",
   "capabilities": [
     "commands:user-invoked",
     "mcp:remote-oauth",
-    "skills:static"
+    "skills:static",
+    "hooks:explicit-attachment-retry",
+    "local-state:explicit-attachment-outbox"
   ],
   "mcp_tools": [
     "orgx_get_agent_status",
@@ -25,8 +27,8 @@
     "claude_code"
   ],
   "session_security": {
-    "schema_version": "orgx-claude-session-security/v1",
-    "enforcement_model": "stateless_remote_call",
+    "schema_version": "orgx-claude-session-security/v2",
+    "enforcement_model": "fresh_remote_authority_with_explicit_retry_data",
     "authority": {
       "source": "current_mcp_response",
       "cache": "forbidden",
@@ -37,9 +39,15 @@
       "aliases": "not_applicable"
     },
     "local_state": {
-      "storage": "none",
+      "storage": "private_explicit_attachment_outbox",
       "project_paths": "forbidden",
-      "private_file_mode_if_introduced": "0600"
+      "private_file_mode": "0600",
+      "directory_mode": "0700",
+      "credentials": "forbidden",
+      "automatic_capture": "forbidden",
+      "retry_scope": "same_session_explicit_requests_only",
+      "max_entries": 20,
+      "max_stop_attempts": 3
     },
     "lease": {
       "owner": "hosted_mcp_and_native_oauth",
@@ -47,5 +55,5 @@
       "expired": "reject_and_reauthenticate"
     }
   },
-  "notes": "The public plugin loads static guidance, user-invoked commands, and eight existing OrgX operations through native OAuth. Work updates and output attachments require the authenticated account write grant; neither approves or completes work. Standard hosted OrgX MCP usage may be recorded. No automatic hooks, local sidecar, or embedded credentials. The source package is not cryptographically signed."
+  "notes": "Eight existing OrgX operations use native OAuth and current server authority. Explicit user-selected attachment requests may be stored privately with stable retry keys. One bounded Stop hook asks the current Claude runtime to retry only pending requests from this session; it has no network or credential access. No file discovery, automatic capture, new publication, local sidecar, or embedded credentials. Write grants remain required; attachment does not approve or complete work. Standard hosted MCP usage may be recorded. This runtime change requires new directory review. The source package is unsigned."
 }

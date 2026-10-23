@@ -1,6 +1,6 @@
 {
   "name": "@useorgx/claude-code-plugin",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.",
   "type": "module",
   "private": false,
@@ -17,6 +17,8 @@
     ".mcp.json",
     "commands/",
     "skills/",
+    "hooks/hooks.json",
+    "scripts/attachment-outbox.mjs",
     "plugin.manifest.json",
     "README.md"
   ],

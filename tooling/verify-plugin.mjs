@@ -21,7 +21,10 @@ function readJson(path) {
 function listFiles(path) {
   if (!existsSync(path)) return [];
   return readdirSync(path, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isDirectory() && [".git", "artifacts", "node_modules"].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      [".git", "artifacts", "node_modules"].includes(entry.name)
+    ) {
       return [];
     }
     const child = join(path, entry.name);
@@ -39,7 +42,9 @@ function assertSameMembers(actual, expected, label) {
   const actualSorted = [...actual].sort();
   const expectedSorted = [...expected].sort();
   if (JSON.stringify(actualSorted) !== JSON.stringify(expectedSorted)) {
-    fail(`${label} must be ${JSON.stringify(expectedSorted)}, received ${JSON.stringify(actualSorted)}`);
+    fail(
+      `${label} must be ${JSON.stringify(expectedSorted)}, received ${JSON.stringify(actualSorted)}`,
+    );
   }
 }
 
@@ -71,7 +76,9 @@ for (const key of ["name", "version", "description"]) {
 if (manifest.name !== "orgx-claude-code-plugin") fail("unexpected plugin name");
 if (manifest.displayName !== "OrgX") fail("plugin displayName must be OrgX");
 if (manifest.homepage !== "https://useorgx.com") fail("unexpected homepage");
-if (manifest.repository !== "https://github.com/useorgx/orgx-claude-code-plugin") {
+if (
+  manifest.repository !== "https://github.com/useorgx/orgx-claude-code-plugin"
+) {
   fail("unexpected repository URL");
 }
 if (manifest.license !== "MIT") fail("plugin license must be MIT");
@@ -108,8 +115,13 @@ if (Object.hasOwn(manifest, "mcpServers")) {
   fail("MCP configuration must be defined only in root .mcp.json");
 }
 const orgxServer = mcp.mcpServers?.orgx;
-if (!orgxServer || orgxServer.type !== "http") fail("missing HTTP orgx MCP server");
-assertSameMembers(Object.keys(mcp.mcpServers ?? {}), ["orgx"], "MCP server keys");
+if (!orgxServer || orgxServer.type !== "http")
+  fail("missing HTTP orgx MCP server");
+assertSameMembers(
+  Object.keys(mcp.mcpServers ?? {}),
+  ["orgx"],
+  "MCP server keys",
+);
 const expectedMcpUrl = "https://mcp.useorgx.com/mcp?profile=claude-code";
 if (orgxServer.url !== expectedMcpUrl) {
   fail(`orgx MCP URL must be ${expectedMcpUrl}`);
@@ -117,7 +129,7 @@ if (orgxServer.url !== expectedMcpUrl) {
 assertSameMembers(Object.keys(orgxServer), ["type", "url"], "orgx MCP fields");
 
 const marketplacePlugin = marketplace.plugins?.find(
-  (plugin) => plugin.name === manifest.name
+  (plugin) => plugin.name === manifest.name,
 );
 if (!marketplacePlugin) fail("marketplace is missing the OrgX plugin");
 if (marketplacePlugin.source !== "./") {
@@ -132,15 +144,23 @@ const expectedPublishedPaths = [
   ".mcp.json",
   "commands/",
   "skills/",
+  "hooks/hooks.json",
+  "scripts/attachment-outbox.mjs",
   "plugin.manifest.json",
   "README.md",
 ];
-assertSameMembers(pkg.files ?? [], expectedPublishedPaths, "package files allowlist");
+assertSameMembers(
+  pkg.files ?? [],
+  expectedPublishedPaths,
+  "package files allowlist",
+);
 if (pkg.bin || pkg.exports || pkg.dependencies) {
-  fail("public plugin must not publish executables, runtime exports, or runtime dependencies");
+  fail(
+    "public plugin must not publish executables, runtime exports, or runtime dependencies",
+  );
 }
 
-for (const placeholderDirectory of ["agents", "hooks", "lib", "scripts"]) {
+for (const placeholderDirectory of ["agents", "lib"]) {
   const directoryPath = resolve(root, placeholderDirectory);
   if (!existsSync(directoryPath)) {
     fail(`wizard compatibility directory is missing: ${placeholderDirectory}`);
@@ -148,9 +168,37 @@ for (const placeholderDirectory of ["agents", "hooks", "lib", "scripts"]) {
   assertSameMembers(
     listFiles(directoryPath).map((path) => relative(directoryPath, path)),
     [".gitkeep"],
-    `${placeholderDirectory} placeholder contents`
+    `${placeholderDirectory} placeholder contents`,
   );
 }
+for (const [directory, allowed] of [
+  ["hooks", [".gitkeep", "hooks.json"]],
+  ["scripts", [".gitkeep", "attachment-outbox.mjs"]],
+]) {
+  assertSameMembers(
+    listFiles(resolve(root, directory)).map((path) =>
+      relative(resolve(root, directory), path),
+    ),
+    allowed,
+    `${directory} bounded runtime contents`,
+  );
+}
+const hooks = readJson(resolve(root, "hooks", "hooks.json"));
+assertSameMembers(Object.keys(hooks.hooks ?? {}), ["Stop"], "hook events");
+const expectedStop = [
+  {
+    hooks: [
+      {
+        type: "command",
+        command: "node",
+        args: ["${CLAUDE_PLUGIN_ROOT}/scripts/attachment-outbox.mjs", "stop"],
+        timeout: 5,
+      },
+    ],
+  },
+];
+if (JSON.stringify(hooks.hooks.Stop) !== JSON.stringify(expectedStop))
+  fail("Stop must invoke only the bounded attachment helper without a shell");
 for (const forbiddenCommand of [
   "orgx-autopilot-start.md",
   "orgx-autopilot-resume.md",
@@ -174,11 +222,23 @@ const loadedFiles = loadedCapabilityRoots
 
 const prohibitedCapabilityPatterns = [
   ["shell execution", /!`/u],
-  ["automatic lifecycle event", /SessionStart|PreToolUse|PostToolUse|SubagentStop/u],
-  ["dynamic skill sync", /sync[-_ ]skills|skill[-_ ]pack|materialize[^\n]*SKILL/iu],
+  [
+    "automatic lifecycle event",
+    /SessionStart|PreToolUse|PostToolUse|SubagentStop/u,
+  ],
+  [
+    "dynamic skill sync",
+    /sync[-_ ]skills|skill[-_ ]pack|materialize[^\n]*SKILL/iu,
+  ],
   ["dynamic agent sync", /sync[-_ ]agents|agent[-_ ]pack/iu],
-  ["session payload field", /tool[_ ]input|transcript[_ ]path|conversation[_ ]id/iu],
-  ["prohibited context source", /Claude'?s memory|chat history|conversation summaries|user files/iu],
+  [
+    "session payload field",
+    /tool[_ ]input|transcript[_ ]path|conversation[_ ]id/iu,
+  ],
+  [
+    "prohibited context source",
+    /Claude'?s memory|chat history|conversation summaries|user files/iu,
+  ],
   ["local stdin reader", /process\.stdin/iu],
   ["local runtime invocation", /node\s+\$\{CLAUDE_PLUGIN_ROOT\}/u],
 ];
@@ -194,8 +254,13 @@ for (const path of loadedFiles) {
 const commandFiles = listFiles(resolve(root, "commands"));
 assertSameMembers(
   commandFiles.map((path) => relative(resolve(root, "commands"), path)),
-  ["orgx-attach-output.md", "orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"],
-  "loaded commands"
+  [
+    "orgx-attach-output.md",
+    "orgx-login.md",
+    "orgx-operator-chronicle.md",
+    "orgx-status.md",
+  ],
+  "loaded commands",
 );
 
 const serverKey = Object.keys(mcp.mcpServers)[0];
@@ -205,25 +270,50 @@ const commandToolContracts = new Map([
   ["orgx-operator-chronicle.md", "orgx_get_operator_brief"],
 ]);
 for (const [commandFile, toolName] of commandToolContracts) {
-  const commandText = readFileSync(resolve(root, "commands", commandFile), "utf8");
+  const commandText = readFileSync(
+    resolve(root, "commands", commandFile),
+    "utf8",
+  );
   const allowedTools = commandText.match(/^allowed-tools:\s*(\S+)\s*$/mu)?.[1];
   const expectedTool = `${scopedToolPrefix}${toolName}`;
   if (allowedTools !== expectedTool) {
-    fail(`${commandFile} allowed-tools must be ${expectedTool}, received ${String(allowedTools)}`);
+    fail(
+      `${commandFile} allowed-tools must be ${expectedTool}, received ${String(allowedTools)}`,
+    );
   }
 }
-const attachCommand = readFileSync(resolve(root, 'commands', 'orgx-attach-output.md'), 'utf8');
-const attachTools = attachCommand.match(/^allowed-tools:\s*(.+)$/mu)?.[1]?.split(',').map((name) => name.trim());
-assertSameMembers(attachTools ?? [], [`${scopedToolPrefix}orgx_inspect`, `${scopedToolPrefix}orgx_update_work`], 'output command tools');
-for (const required of ['idempotency_key', 'output_front_door', 'Do not include `fields`', 'client acceptance and work completion pending']) {
-  if (!attachCommand.includes(required)) fail(`output command is missing ${required}`);
+const attachCommand = readFileSync(
+  resolve(root, "commands", "orgx-attach-output.md"),
+  "utf8",
+);
+const attachTools = attachCommand
+  .match(/^allowed-tools:\s*(.+)$/mu)?.[1]
+  ?.split(",")
+  .map((name) => name.trim());
+assertSameMembers(
+  attachTools ?? [],
+  [
+    `${scopedToolPrefix}orgx_inspect`,
+    `${scopedToolPrefix}orgx_update_work`,
+    'Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/attachment-outbox.mjs" *)',
+  ],
+  "output command tools",
+);
+for (const required of [
+  "idempotency_key",
+  "output_front_door",
+  "Do not include `fields`",
+  "client acceptance and work completion pending",
+]) {
+  if (!attachCommand.includes(required))
+    fail(`output command is missing ${required}`);
 }
 
 const skillFiles = listFiles(resolve(root, "skills"));
 assertSameMembers(
   skillFiles.map((path) => relative(resolve(root, "skills"), path)),
   ["orgx-setup/SKILL.md"],
-  "loaded skills"
+  "loaded skills",
 );
 
 if (Object.hasOwn(releaseManifest, "signature")) {
@@ -231,8 +321,14 @@ if (Object.hasOwn(releaseManifest, "signature")) {
 }
 assertSameMembers(
   releaseManifest.capabilities ?? [],
-  ["commands:user-invoked", "mcp:remote-oauth", "skills:static"],
-  "release capabilities"
+  [
+    "commands:user-invoked",
+    "mcp:remote-oauth",
+    "skills:static",
+    "hooks:explicit-attachment-retry",
+    "local-state:explicit-attachment-outbox",
+  ],
+  "release capabilities",
 );
 const expectedDirectoryTools = [
   "orgx_get_agent_status",
@@ -244,31 +340,38 @@ const expectedDirectoryTools = [
   "orgx_search",
   "orgx_update_work",
 ];
-if (releaseManifest.mcp_contract?.profile !== "claude-code" ||
-    releaseManifest.mcp_contract?.family !== "operation-v1") {
+if (
+  releaseManifest.mcp_contract?.profile !== "claude-code" ||
+  releaseManifest.mcp_contract?.family !== "operation-v1"
+) {
   fail("release manifest must bind the current eight-operation profile");
 }
 assertSameMembers(
   releaseManifest.mcp_tools ?? [],
   expectedDirectoryTools,
-  "directory MCP tool catalog"
+  "directory MCP tool catalog",
 );
 if (releaseManifest.mcp_tools.includes("orgx_bootstrap")) {
   fail("directory MCP tool catalog must not include stateful orgx_bootstrap");
 }
 for (const toolName of commandToolContracts.values()) {
   if (!releaseManifest.mcp_tools.includes(toolName)) {
-    fail(`command tool is missing from directory MCP tool catalog: ${toolName}`);
+    fail(
+      `command tool is missing from directory MCP tool catalog: ${toolName}`,
+    );
   }
 }
 
 try {
   assertSessionSecurityContract({
     manifestSecurity: releaseManifest.session_security,
-    statusCommand: readFileSync(resolve(root, "commands", "orgx-status.md"), "utf8"),
+    statusCommand: readFileSync(
+      resolve(root, "commands", "orgx-status.md"),
+      "utf8",
+    ),
     chronicleCommand: readFileSync(
       resolve(root, "commands", "orgx-operator-chronicle.md"),
-      "utf8"
+      "utf8",
     ),
   });
 } catch (error) {
@@ -311,7 +414,9 @@ for (const path of publicCopyPaths) {
 }
 const expectedFingerprint = expectedManifestFingerprint(releaseManifest);
 if (releaseManifest.manifest_fingerprint !== expectedFingerprint) {
-  fail(`release manifest fingerprint mismatch; expected ${expectedFingerprint}`);
+  fail(
+    `release manifest fingerprint mismatch; expected ${expectedFingerprint}`,
+  );
 }
 
 const submission = readFileSync(paths.submission, "utf8");
@@ -320,7 +425,8 @@ for (const expectedUrl of [
   "https://platform.claude.com/plugins/submit",
   "https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy",
 ]) {
-  if (!submission.includes(expectedUrl)) fail(`submission runbook missing ${expectedUrl}`);
+  if (!submission.includes(expectedUrl))
+    fail(`submission runbook missing ${expectedUrl}`);
 }
 if (submission.includes("https://claude.ai/settings/plugins/submit")) {
   fail("submission runbook contains a stale plugin portal path");
@@ -338,4 +444,6 @@ console.log(`manifest: ${manifest.name}@${manifest.version}`);
 console.log(`loaded commands: ${commandFiles.length}`);
 console.log(`loaded skills: ${skillFiles.length}`);
 console.log(`mcp server: ${orgxServer.url}`);
-console.log(`release manifest: ${releaseManifest.manifest_fingerprint} (unsigned)`);
+console.log(
+  `release manifest: ${releaseManifest.manifest_fingerprint} (unsigned)`,
+);
