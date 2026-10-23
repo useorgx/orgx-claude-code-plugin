@@ -1,10 +1,10 @@
 {
   "name": "orgx",
   "description": "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "metadata": {
     "description": "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.",
-    "version": "0.1.16"
+    "version": "0.1.17"
   },
   "owner": {
     "name": "OrgX Team",
@@ -16,7 +16,7 @@
       "displayName": "OrgX",
       "description": "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.",
       "source": "./",
-      "version": "0.1.16",
+      "version": "0.1.17",
       "author": {
         "name": "OrgX Team",
         "email": "reviewers@useorgx.com"

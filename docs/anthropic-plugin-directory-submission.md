@@ -2,9 +2,10 @@
 
 ## Current state
 
-**Prepared, not submitted.** Version 0.1.16 adds explicit user-requested writes
-and requires a matching hosted app/MCP deployment and a new directory review.
-It does not inherit any earlier status-only review or publication evidence.
+**Prepared, not submitted.** Version 0.1.17 adds a `Stop` hook and private local
+outbox for explicitly queued attachment requests. This runtime change requires
+a new directory review and matching hosted app/MCP deployment. It does not
+inherit review or publication evidence from the earlier stateless package.
 A source commit, portal submission, automated
 screening result, directory publication, and Anthropic Verified status require
 separate evidence.
@@ -13,7 +14,7 @@ separate evidence.
 
 - Name: `OrgX`
 - Plugin ID: `orgx-claude-code-plugin`
-- Version: `0.1.16`
+- Version: `0.1.17`
 - Category: `productivity`
 - Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
 - Homepage: `https://useorgx.com`
@@ -25,10 +26,37 @@ separate evidence.
 - Short description: `Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.`
 
 The plugin contains a remote HTTPS MCP configuration, four user-invoked
-commands, and one static setup skill. It loads no automatic hooks or local
-executables. It does not fetch skill or agent instructions from OrgX. It does
-not read Claude memory, session history, summaries, or user files. The MCP
-server receives only the inputs needed for an OrgX action the user requests.
+commands, one static setup skill, one `Stop` hook and the dependency-free
+`scripts/attachment-outbox.mjs` helper. The user explicitly selects the existing
+OrgX target and durable HTTPS output to queue. The helper stores the request
+and retry state under `~/.config/useorgx/claude-code/attachment-outbox` with
+directory mode `0700` and file mode `0600`. Storage is bounded to 20 entries of
+64 KiB each.
+
+The hook consumes only the current session identifier and stop-loop flag. It
+emits bounded instructions for that Claude session to inspect the target and
+retry the exact request through the existing native OAuth MCP connection. The
+helper reads no tokens, sends no direct HTTP requests, and does not discover
+project files or read session text, summaries or transcripts. Stored selectors
+and request data do not grant authority; each attempt requires current MCP
+responses and the account's grants. Another session cannot automatically retry
+the request.
+
+Three failed attempts or seven days of age pause the request. Authentication,
+permission and validation failures also pause. An explicit user command lists,
+retries or clears requests; clearing removes only local state. The MCP server
+receives only the inputs needed for the requested OrgX operation.
+
+The explicit `recover` action repairs local state after a crash. A lock contains
+only a PID and nonce, is prepared and fsynced, and is published with an atomic
+hard link. Recovery refuses a live owner and can release a dead owner's lock.
+It restores valid uncommitted staging as paused with reason `recovered`, keeping
+the exact request and retry key; explicit retry is still required. Incomplete
+staging is discarded and unknown files are rejected. Recovery makes no MCP
+call, and users must not force a live lock or delete unrelated files.
+
+The `Stop` hook does not run for a user interrupt or an API-error termination.
+Requests remain pending in those cases; the hook provides no delivery proof.
 The fixed eight-operation profile permits content edits and reviewable output
 attachment only when requested and authorized. It exposes no deletion or
 workflow transition operation. Standard
@@ -37,11 +65,13 @@ the plugin itself adds no local telemetry or background reporting.
 
 ## Policy mapping
 
-The package was narrowed for the Anthropic Software Directory Policy dated
-April 15, 2026:
+Review the changed runtime against the Anthropic Software Directory Policy
+dated April 15, 2026. The following maps the intended boundary; it does not
+establish provider approval:
 
-- Sections 1D and 1F: no automatic context collection and no session/file
-  extraction paths.
+- Sections 1D and 1F: only explicitly queued attachment request data is retained;
+  the hook's session identifier selects that request. No session-text or file
+  extraction path is present.
 - Sections 2A and 2B: every loaded command and skill is narrow and matches its
   actual behavior.
 - Section 2D: user-invoked workflows name only the bundled OrgX connector.
@@ -63,8 +93,9 @@ Official policy and submission documentation:
 1. Clone the public repository over HTTPS.
 2. Run `npm ci` and `npm run check`.
 3. Run `claude plugin validate . --strict`.
-4. Inspect `npm pack --dry-run --json`; the artifact must contain no hooks,
-   agents, sidecar, telemetry client, dispatch runtime, or sync runtime.
+4. Inspect `npm pack --dry-run --json`. Confirm the exact `Stop` hook and
+   `scripts/attachment-outbox.mjs` are packaged. Confirm there is no subagent,
+   sidecar, telemetry client, dispatch runtime or sync runtime.
 5. Install from the self-hosted public marketplace:
 
    ```bash
@@ -104,6 +135,29 @@ Official policy and submission documentation:
 4. Invoke `/orgx-claude-code-plugin:orgx-attach-output` with a seeded target and
    durable output URL. Verify the returned stored artifact, retry the same
    payload/key without duplication, and confirm acceptance remains pending.
+5. Explicitly queue a seeded attachment, then let the originating session reach
+   `Stop`. Confirm the hook asks Claude to inspect the current target and use
+   `orgx_update_work` through native OAuth. Confirm another session does not
+   automatically retry it and that ordinary stops with no queued request do
+   nothing.
+6. Exercise permission, authentication and validation failures, the three-attempt
+   limit and seven-day expiry. Confirm each pauses without losing the exact
+   request/key. Explicitly list, retry and clear a local entry; clearing must
+   leave the stored OrgX artifact intact.
+7. Exercise a crash during local queue staging, then explicitly run `recover`.
+   Confirm a live owner is refused and a dead owner's valid request returns
+   paused with the same payload/key. Confirm incomplete staging is discarded,
+   unknown files are rejected, and no MCP call occurs until an explicit retry.
+
+Claude Code 2.1.309's strict validator currently reports pre-existing
+plugin-name and missing-icon warnings for this package. Strict validation has
+not passed. Record normal validation separately when run, and retain the actual
+provider review result rather than treating these local checks as approval.
+
+Local protocol tests cover the helper's bounded inputs, queue and retry rules.
+They do not establish a successful native OAuth connection or live MCP write.
+Retain separate evidence for those checks and for package signing or directory
+publication; the source package makes no cryptographic signing claim.
 
 ## Pre-submission evidence
 
@@ -113,11 +167,14 @@ Official policy and submission documentation:
 - [ ] `npm run manifest:check`
 - [ ] `claude plugin validate . --strict`
 - [ ] package-content inspection passed
+- [ ] session isolation, private file modes, size limits and retry/expiry tests passed
+- [ ] explicit local recovery tested for live/dead locks and valid/incomplete staging
 - [ ] clean local marketplace install passed
 - [ ] clean remote HTTPS marketplace install passed with SSH disabled
 - [ ] released OrgX wizard copied `.mcp.json` and pruned legacy runtime files
 - [ ] native OAuth completed with the reviewer account
 - [ ] all eight advertised MCP tools exercised with seeded data
+- [ ] originating-session Stop retry exercised through native OAuth with a stored artifact readback
 - [ ] privacy, terms, support, repository, and MCP URLs respond publicly
 
 ## Official submission portals

@@ -1,0 +1,20 @@
+{
+  "description": "Retry only explicitly queued user attachments through the current Claude OAuth runtime; no capture or direct network calls.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/scripts/attachment-outbox.mjs",
+              "stop"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
