@@ -13,18 +13,21 @@
 ## Policy-safe installed surface
 
 - `.mcp.json` contains only the native-OAuth HTTPS endpoint
-  `https://mcp.useorgx.com/mcp?profile=read-only`
-- `plugin.manifest.json` lists exactly seven focused profile tools and does not list
+  `https://mcp.useorgx.com/mcp?profile=claude-code`
+- `plugin.manifest.json` lists exactly eight focused profile tools and does not list
   `orgx_bootstrap`
-- the release manifest fingerprint binds the seven current tools and
-  `mcp_contract` to `read-only`
+- the release manifest fingerprint binds the eight existing operations and
+  `mcp_contract` to `claude-code`
 - deploy the matching server profile before releasing this client change; confirm
-  authenticated discovery exposes exactly seven tools, with no mutation callbacks
-- `commands/` contains only user-invoked, OrgX-specific status/setup workflows
+  authenticated discovery with write grants exposes exactly eight operations
+- prove a Read grant hides updates and an authorized output attachment enters
+  review without completing or approving work; retry its exact key/payload
+- `commands/` contains only user-invoked OrgX status/setup/output workflows
 - installed commands resolve under Claude Code's plugin namespace:
   `/orgx-claude-code-plugin:orgx-login`,
-  `/orgx-claude-code-plugin:orgx-status`, and
-  `/orgx-claude-code-plugin:orgx-operator-chronicle`
+  `/orgx-claude-code-plugin:orgx-status`,
+  `/orgx-claude-code-plugin:orgx-operator-chronicle`, and
+  `/orgx-claude-code-plugin:orgx-attach-output`
 - `skills/` contains only static, human-readable setup guidance
 - no automatic hook configuration is present
 - no subagent profile is present
@@ -79,8 +82,9 @@ CLAUDE_CONFIG_DIR="$plugin_smoke_root/config" \
 
 Installation is not authentication. Open `/mcp` and verify native OAuth and the
 connected state separately. After authentication, verify the server advertises
-exactly the seven tools in `plugin.manifest.json`, exposes no destructive
-business action, and exercise each tool with seeded reviewer data.
+exactly the eight operations in `plugin.manifest.json` with the requested
+grants, and exercise each operation with seeded reviewer data. Keep deletion,
+approval and completion outside this profile.
 
 ## OrgX wizard compatibility
 
@@ -111,9 +115,9 @@ ORGX_WIZARD_CONFIG_HOME="$wizard_smoke_root/wizard" \
 
 Then inspect the managed Claude plugin cache and prove:
 
-- `.mcp.json` exists and contains the `read-only` endpoint
+- `.mcp.json` exists and contains the `claude-code` endpoint
 - only `.gitkeep` exists in `agents/`, `hooks/`, `lib/`, and `scripts/`
-- the three commands and one setup skill exist
+- the four commands and one setup skill exist
 - no legacy installed file survives the sync
 
 As of the 0.1.12 source preparation, wizard `0.1.52` still omitted `.mcp.json`

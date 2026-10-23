@@ -2,7 +2,10 @@
 
 ## Current state
 
-**Prepared, not submitted.** A source commit, portal submission, automated
+**Prepared, not submitted.** Version 0.1.16 adds explicit user-requested writes
+and requires a matching hosted app/MCP deployment and a new directory review.
+It does not inherit any earlier status-only review or publication evidence.
+A source commit, portal submission, automated
 screening result, directory publication, and Anthropic Verified status require
 separate evidence.
 
@@ -10,7 +13,7 @@ separate evidence.
 
 - Name: `OrgX`
 - Plugin ID: `orgx-claude-code-plugin`
-- Version: `0.1.13`
+- Version: `0.1.16`
 - Category: `productivity`
 - Repository: `https://github.com/useorgx/orgx-claude-code-plugin`
 - Homepage: `https://useorgx.com`
@@ -19,14 +22,16 @@ separate evidence.
 - Support: `https://useorgx.com/support`
 - Maintainer: `reviewers@useorgx.com`
 - License: `MIT`
-- Short description: `Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.`
+- Short description: `Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.`
 
-The plugin contains a remote HTTPS MCP configuration, three user-invoked
+The plugin contains a remote HTTPS MCP configuration, four user-invoked
 commands, and one static setup skill. It loads no automatic hooks or local
 executables. It does not fetch skill or agent instructions from OrgX. It does
 not read Claude memory, session history, summaries, or user files. The MCP
 server receives only the inputs needed for an OrgX action the user requests.
-The fixed seven-tool profile exposes no destructive business action. Standard
+The fixed eight-operation profile permits content edits and reviewable output
+attachment only when requested and authorized. It exposes no deletion or
+workflow transition operation. Standard
 OrgX MCP usage may be recorded by the hosted service for operation and metering;
 the plugin itself adds no local telemetry or background reporting.
 
@@ -69,9 +74,9 @@ Official policy and submission documentation:
 
 6. Invoke `/orgx-claude-code-plugin:orgx-login` (or open `/mcp` directly),
    select `orgx`, and complete native OAuth.
-7. Confirm the endpoint is
-   `https://mcp.useorgx.com/mcp?profile=read-only` and the server is
-   connected. Confirm it advertises exactly these seven profile tools:
+7. Confirm the matching app attachment route and MCP profile are deployed, then confirm the endpoint is
+   `https://mcp.useorgx.com/mcp?profile=claude-code` and the server is
+   connected. With a write grant, confirm it advertises exactly these eight profile tools:
 
    - `orgx_search`
    - `orgx_inspect`
@@ -79,6 +84,7 @@ Official policy and submission documentation:
    - `orgx_get_agent_status`
    - `orgx_get_initiative_progress`
    - `orgx_get_operation_status`
+   - `orgx_update_work`
    - `orgx_get_operator_brief`
 
 8. Use the provider's secure reviewer-credential field for the populated test
@@ -95,6 +101,9 @@ Official policy and submission documentation:
    the first action.
 3. Ask Claude to use `orgx_search` to find a seeded project term, then use
    `orgx_inspect` only on a returned OrgX entity.
+4. Invoke `/orgx-claude-code-plugin:orgx-attach-output` with a seeded target and
+   durable output URL. Verify the returned stored artifact, retry the same
+   payload/key without duplication, and confirm acceptance remains pending.
 
 ## Pre-submission evidence
 
@@ -108,7 +117,7 @@ Official policy and submission documentation:
 - [ ] clean remote HTTPS marketplace install passed with SSH disabled
 - [ ] released OrgX wizard copied `.mcp.json` and pruned legacy runtime files
 - [ ] native OAuth completed with the reviewer account
-- [ ] all seven advertised MCP tools exercised with seeded data
+- [ ] all eight advertised MCP tools exercised with seeded data
 - [ ] privacy, terms, support, repository, and MCP URLs respond publicly
 
 ## Official submission portals

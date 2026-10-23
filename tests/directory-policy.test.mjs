@@ -37,7 +37,7 @@ function walk(path) {
 test("directory verifier accepts the policy-safe public surface", () => {
   const output = run(process.execPath, ["tooling/verify-plugin.mjs"]);
   assert.match(output, /verify-plugin: ok/u);
-  assert.match(output, /loaded commands: 3/u);
+  assert.match(output, /loaded commands: 4/u);
   assert.match(output, /loaded skills: 1/u);
 });
 
@@ -51,6 +51,7 @@ test("npm artifact contains no executable or automatic capability paths", () => 
     ".claude-plugin/plugin.json",
     ".mcp.json",
     "commands/orgx-login.md",
+    "commands/orgx-attach-output.md",
     "commands/orgx-operator-chronicle.md",
     "commands/orgx-status.md",
     "skills/orgx-setup/SKILL.md",
@@ -62,6 +63,14 @@ test("npm artifact contains no executable or automatic capability paths", () => 
     assert.doesNotMatch(path, /^(?:agents|hooks|lib|scripts|tests|tooling)\//u);
     assert.doesNotMatch(path, /\.(?:js|mjs|cjs)$/u);
   }
+});
+
+test('output attachment is user-invoked, scoped, retryable and leaves rulings to OrgX', () => {
+  const text = readFileSync(resolve(root, 'commands/orgx-attach-output.md'), 'utf8');
+  assert.match(text, /allowed-tools: mcp__plugin_orgx-claude-code-plugin_orgx__orgx_inspect, mcp__plugin_orgx-claude-code-plugin_orgx__orgx_update_work/u);
+  for (const guard of ['current MCP call', 'native OAuth reauthentication', 'project-path alias as authority', 'same retry key and exact payload', 'client acceptance and work completion pending'])
+    assert.ok(text.replace(/\s+/gu, ' ').includes(guard), guard);
+  assert.doesNotMatch(text, /orgx_attach|orgx_register_artifact|process\.stdin|transcript_path/u);
 });
 
 test("GitHub tree remains compatible with the wizard's directory fetch", () => {
@@ -97,7 +106,7 @@ test("loaded instructions contain no automatic, dynamic, or session-data path", 
 test("loaded command and skill roots contain no hidden state or lease file", () => {
   assert.deepEqual(
     walk(resolve(root, "commands")).map((path) => relative(resolve(root, "commands"), path)),
-    ["orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"]
+    ["orgx-attach-output.md", "orgx-login.md", "orgx-operator-chronicle.md", "orgx-status.md"]
   );
   assert.deepEqual(
     walk(resolve(root, "skills")).map((path) => relative(resolve(root, "skills"), path)),
@@ -127,20 +136,20 @@ test("commands use Claude plugin-scoped bundled MCP tool names", () => {
   }
 });
 
-test("public catalog contains exactly seven focused profile tools", () => {
+test("public catalog contains exactly eight focused profile tools", () => {
   const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
   assert.deepEqual([...manifest.mcp_tools].sort(), [
     "orgx_get_agent_status", "orgx_get_initiative_progress", "orgx_get_next_actions",
-    "orgx_get_operation_status", "orgx_get_operator_brief", "orgx_inspect", "orgx_search",
+    "orgx_get_operation_status", "orgx_get_operator_brief", "orgx_inspect", "orgx_search", "orgx_update_work",
   ]);
   assert.equal(manifest.mcp_tools.includes("orgx_bootstrap"), false);
 });
 
-test("Claude commands bind the current seven-tool informational profile", () => {
+test("Claude commands bind the current eight-operation profile", () => {
   const mcp = JSON.parse(readFileSync(resolve(root, ".mcp.json"), "utf8"));
   const manifest = JSON.parse(readFileSync(resolve(root, "plugin.manifest.json"), "utf8"));
-  assert.equal(new URL(mcp.mcpServers.orgx.url).searchParams.get("profile"), "read-only");
-  assert.deepEqual(manifest.mcp_contract, { family: "operation-v1", profile: "read-only" });
+  assert.equal(new URL(mcp.mcpServers.orgx.url).searchParams.get("profile"), "claude-code");
+  assert.deepEqual(manifest.mcp_contract, { family: "operation-v1", profile: "claude-code" });
   const widened = structuredClone(manifest);
   widened.mcp_contract.profile = "claude-directory";
   assert.notEqual(expectedManifestFingerprint(widened), expectedManifestFingerprint(manifest));
@@ -249,7 +258,7 @@ test("session security contract rejects plugin-owned TTL or stale-expiry reuse",
 
 test("public copy uses the audited non-destructive profile boundary", () => {
   const expectedDescription =
-    "Connect Claude Code to a focused, non-destructive, closed-world OrgX status profile through native OAuth.";
+    "Connect Claude Code to OrgX status, bounded work updates, and reviewable outputs through native OAuth.";
   const pluginManifest = JSON.parse(
     readFileSync(resolve(root, ".claude-plugin", "plugin.json"), "utf8")
   );
