@@ -7,3 +7,9 @@ artifacts/
 .claude/orgx-skill-pack-state.json
 .claude/orgx-capability-cache.json
 .claude/orgx-skills/
+
+# Claude Code writes its plugin API declarations and a tsconfig.json extending
+# them into the mod each time it loads it from disk; the repo's tsconfig for the
+# mod is tooling/orgx-live/tsconfig.json.
+plugins/orgx-live/.claude-plugin/types/
+plugins/orgx-live/tsconfig.json
